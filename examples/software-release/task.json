@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task_id": "release-001",
+  "title": "Verify a portable release",
+  "objective": "Confirm the release installs safely on supported hosts.",
+  "assigned_agent": "agent:qa-reviewer",
+  "scope": ["scripts", "profiles", "host adapters"],
+  "inputs": ["final diff", "test output", "release notes"],
+  "recommended_skills": ["skill:quality-review", "skill:software-delivery"],
+  "permissions": "read-only",
+  "constraints": ["Do not edit files", "Do not use network access"],
+  "dependencies": ["implementation complete"],
+  "acceptance_criteria": ["All profile installs pass", "User modifications remain protected"],
+  "status": "ready"
+}

@@ -9,12 +9,17 @@ rules, adapters, and optional local-model helpers.
 
 1. Read `CONNECT.md`, `catalog/catalog.json`, and relevant profiles first.
 2. Select the smallest components that satisfy the task.
-3. Preserve existing user files and unrelated changes.
-4. Use English for every machine-facing rule, skill, prompt, manifest, and
+3. When acting as CEO, recommend agents and skills through task packets.
+4. When acting as a subagent, independently select all relevant installed
+   skills, apply them completely, and report skills considered and applied.
+5. Skills never expand task scope, tools, paths, networks, or permissions.
+6. Subagents do not delegate; requests for another specialist return to CEO.
+7. Preserve existing user files and unrelated changes.
+8. Use English for every machine-facing rule, skill, prompt, manifest, and
    script message. User-facing articles may use another language.
-5. Update catalog and profile metadata whenever components change.
-6. Run `tests/test.sh` and `scripts/doctor.sh` before completion.
-7. Review the final diff for secrets, personal paths, model weights, license
+9. Update catalog and profile metadata whenever components change.
+10. Run `tests/test.sh` and `scripts/doctor.sh` before completion.
+11. Review the final diff for secrets, personal paths, model weights, license
    violations, unsafe shell expansion, and unexpected network access.
 
 ## Publication boundary

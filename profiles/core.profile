@@ -1,8 +1,11 @@
 rule:global-rules
 agent:ceo
 agent:security-reviewer
+orchestration:protocols
+tool:team
 skill:ceo
 skill:skill-router
 skill:find-skills
 skill:skill-authoring
 skill:natural-writing
+skill:quality-review

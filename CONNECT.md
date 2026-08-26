@@ -2,6 +2,9 @@
 
 This file is the entry point for humans and AI agents.
 
+The installer and host adapters require Git, Bash, and Python 3 on macOS or
+Linux.
+
 ## Instructions for an AI agent
 
 1. Read `catalog/catalog.json` and the requested profile files.
@@ -16,6 +19,17 @@ This file is the entry point for humans and AI agents.
 10. After changing the ecosystem, update the catalog, profile membership,
     documentation, and tests in the same change.
 
+## Instructions for a CEO agent
+
+1. Read `~/.agents/orchestration/protocol.md` and `~/.agents/catalog.json`.
+2. Apply the skills needed for coordination, planning, and verification.
+3. Build a dependency-aware task graph and recommend specialist agents.
+4. Create task packets with `~/.agents/tools/team/team.sh task`.
+5. Recommend skills as hints. Each subagent selects its own final skill set.
+6. Dispatch through the host's native subagent tool; never simulate a result.
+7. Validate returned packets and evidence before marking a task complete.
+8. Keep subagents from delegating further; additional expertise returns to CEO.
+
 ## Human commands
 
 ```bash
@@ -23,6 +37,8 @@ This file is the entry point for humans and AI agents.
 ./scripts/install.sh --profile core --profile marketing
 ./scripts/connect.sh --host codex --host claude
 ./scripts/doctor.sh
+~/.agents/tools/team/team.sh list --type agent
+~/.agents/tools/team/team.sh recommend --tags software,quality
 ```
 
 The default destination is `${AGENTS_HOME:-$HOME/.agents}`. Override it for a
@@ -39,5 +55,5 @@ AGENTS_HOME=/tmp/agent-ecosystem-test ./scripts/install.sh --profile core
 - `gemini`: links installed skills into `~/.gemini/skills`.
 - `generic`: uses `~/.agents` directly; tell the host to read its `AGENTS.md`.
 
-Adapters create only managed skill links. They do not overwrite a host's
-global instruction file. This avoids silently replacing personal rules.
+Adapters create managed skill links and host-native subagent wrappers. They do
+not overwrite a host's global instruction file or conflicting custom agent.

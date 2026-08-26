@@ -30,17 +30,9 @@ if ! command -v python3 >/dev/null 2>&1; then
   warn "python3 is unavailable; catalog JSON validation skipped"
 else
   python3 -m json.tool "$ROOT/catalog/catalog.json" >/dev/null || error "invalid catalog JSON"
-fi
-
-if grep -R -n -E --exclude-dir=.git --exclude='doctor.sh' \
-  --exclude='README*.md' --exclude='*.md.example' \
-  '[А-Яа-яЁё]' "$ROOT" >/dev/null 2>&1; then
-  error "Cyrillic text found in machine-facing repository content"
-fi
-
-if grep -R -n -E --exclude-dir=.git --exclude='doctor.sh' '/Users/[^/]+|/home/[^/]+' \
-  "$ROOT" >/dev/null 2>&1; then
-  error "machine-specific home path found"
+  python3 "$ROOT/library/tools/team/team.py" --home "$ROOT" validate-catalog \
+    --repo-root "$ROOT" >/dev/null || error "catalog semantic validation failed"
+  python3 "$ROOT/scripts/check_repository.py" "$ROOT" || error "repository text validation failed"
 fi
 
 if find "$ROOT" -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \

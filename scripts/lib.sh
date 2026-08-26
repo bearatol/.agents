@@ -41,6 +41,8 @@ component_source() {
     agent) printf '%s/library/agents/%s.md\n' "$root" "$name" ;;
     rule) printf '%s/library/rules/%s.md\n' "$root" "$name" ;;
     model) printf '%s/library/models/%s\n' "$root" "$name" ;;
+    orchestration) printf '%s/library/orchestration\n' "$root" ;;
+    tool) printf '%s/library/tools/%s\n' "$root" "$name" ;;
     *) fail "unknown component kind: $kind" ;;
   esac
 }
@@ -54,6 +56,8 @@ component_destination() {
     agent) printf '%s/agents/%s.md\n' "$home" "$name" ;;
     rule) printf '%s/rules/%s.md\n' "$home" "$name" ;;
     model) printf '%s/local-models/%s\n' "$home" "$name" ;;
+    orchestration) printf '%s/orchestration\n' "$home" ;;
+    tool) printf '%s/tools/%s\n' "$home" "$name" ;;
     *) fail "unknown component kind: $kind" ;;
   esac
 }

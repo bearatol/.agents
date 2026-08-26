@@ -9,6 +9,8 @@ TEST_HOME="$(mktemp -d)"
 trap 'rm -rf "$TEST_HOME"' EXIT
 
 export AGENTS_HOME="$TEST_HOME/.agents"
+TEST_USER_HOME="$TEST_HOME/user"
+mkdir -p "$TEST_USER_HOME"
 
 [[ -f "$ROOT/README.md" ]]
 [[ -f "$ROOT/README.en.md" ]]
@@ -25,7 +27,43 @@ export AGENTS_HOME="$TEST_HOME/.agents"
 [[ -f "$AGENTS_HOME/skills/remotion-video/SKILL.md" ]]
 [[ -f "$AGENTS_HOME/skills/context-engineering/SKILL.md" ]]
 [[ -f "$AGENTS_HOME/agents/ceo.md" ]]
+[[ -f "$AGENTS_HOME/agents/engineer.md" ]]
+[[ -f "$AGENTS_HOME/agents/qa-reviewer.md" ]]
+[[ -f "$AGENTS_HOME/agents/product-editor.md" ]]
+[[ -f "$AGENTS_HOME/orchestration/protocol.md" ]]
+[[ -x "$AGENTS_HOME/tools/team/team.sh" ]]
+[[ -f "$AGENTS_HOME/.ecosystem-state.json" ]]
 [[ -f "$AGENTS_HOME/local-models/mlx-local-runtime/README.md" ]]
+
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate-catalog
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" recommend \
+  --tags software,quality --output "$TEST_HOME/recommendation.json"
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" plan \
+  --goal "Ship a tested installer" --tags software,quality \
+  --output "$TEST_HOME/plan.json"
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" task \
+  --task-id task-001 --agent engineer --title "Improve installer" \
+  --objective "Implement a bounded installer improvement" \
+  --scope scripts/install.sh --recommend-skill software-delivery \
+  --accept "Focused tests pass" --output "$TEST_HOME/task.json"
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate task "$TEST_HOME/task.json"
+"$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate result \
+  "$AGENTS_HOME/orchestration/templates/result.json"
+
+HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini
+[[ -f "$TEST_USER_HOME/.codex/agents/ceo.toml" ]]
+[[ -f "$TEST_USER_HOME/.claude/agents/engineer.md" ]]
+[[ -f "$TEST_USER_HOME/.gemini/agents/marketer.md" ]]
+grep -q 'skill-router' "$TEST_USER_HOME/.claude/agents/engineer.md"
+grep -q 'independently select all relevant skills' "$TEST_USER_HOME/.gemini/agents/marketer.md"
+if grep -q 'skill-router' "$TEST_USER_HOME/.claude/agents/security-reviewer.md"; then
+  printf 'security reviewer unexpectedly preloaded optional skills\n' >&2
+  exit 1
+fi
+if grep -q 'activate_skill' "$TEST_USER_HOME/.gemini/agents/security-reviewer.md"; then
+  printf 'security reviewer unexpectedly received skill activation\n' >&2
+  exit 1
+fi
 
 if "$ROOT/scripts/install.sh" --profile core >/dev/null 2>&1; then
   :
@@ -39,6 +77,27 @@ if "$ROOT/scripts/install.sh" --profile core >/dev/null 2>&1; then
   printf 'conflicting managed file was not reported\n' >&2
   exit 1
 fi
+grep -q '^personal rules$' "$AGENTS_HOME/AGENTS.md"
+
+python3 "$ROOT/scripts/state.py" matches \
+  --state "$AGENTS_HOME/.ecosystem-state.json" \
+  --id skill:natural-writing \
+  --path "$AGENTS_HOME/skills/natural-writing"
+
+printf 'local customization\n' >> "$AGENTS_HOME/skills/natural-writing/SKILL.md"
+if "$ROOT/scripts/install.sh" --profile core --no-root-files >/dev/null 2>&1; then
+  printf 'modified managed skill was not reported as a conflict\n' >&2
+  exit 1
+fi
+grep -q '^local customization$' "$AGENTS_HOME/skills/natural-writing/SKILL.md"
+
+rm "$AGENTS_HOME/AGENTS.md"
+"$ROOT/scripts/install.sh" --component skill:quality-review --no-root-files >/dev/null
+[[ ! -e "$AGENTS_HOME/AGENTS.md" ]]
+
+printf 'personal rules\n' > "$AGENTS_HOME/AGENTS.md"
+"$ROOT/scripts/install.sh" --component skill:quality-review --force \
+  --preserve-agents-file >/dev/null
 grep -q '^personal rules$' "$AGENTS_HOME/AGENTS.md"
 
 printf 'All tests passed.\n'

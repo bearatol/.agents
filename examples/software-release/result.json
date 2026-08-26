@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task_id": "release-001",
+  "agent": "agent:qa-reviewer",
+  "status": "complete",
+  "summary": "The isolated installation and conflict tests passed.",
+  "artifacts": ["tests/test.sh"],
+  "skills_considered": ["skill:quality-review", "skill:software-delivery"],
+  "skills_applied": ["skill:quality-review"],
+  "skill_gaps": [],
+  "evidence": ["tests/test.sh exited with status 0"],
+  "risks": ["Gemini CLI was not installed on the test machine"],
+  "recommended_specialist": null,
+  "next_action": "Run Gemini discovery checks on a machine with Gemini CLI."
+}

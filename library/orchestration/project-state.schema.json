@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/bearatol/agent-ecosystem/project-state.schema.json",
+  "title": "Agent Ecosystem Project State",
+  "type": "object",
+  "required": ["schema_version", "project", "objective", "tasks", "decisions", "updated_at"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "project": {"type": "string"},
+    "objective": {"type": "string"},
+    "tasks": {"type": "array", "items": {"type": "string"}},
+    "decisions": {"type": "array", "items": {"type": "string"}},
+    "updated_at": {"type": "string", "format": "date-time"}
+  },
+  "additionalProperties": false
+}

@@ -21,3 +21,8 @@ requests unrelated to function, or no permission to redistribute.
 
 Prefer referencing and pinned installation over copying. If no safe candidate
 exists, propose an original minimal skill based on functional requirements.
+
+A subagent may use an already installed safe candidate without asking the CEO.
+It must not install, download, publish, or enable network access unless the task
+and user approvals already permit that action. Report missing capabilities and
+approval needs through `skill_gaps`; do not expand the task to obtain them.

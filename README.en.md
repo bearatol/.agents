@@ -18,13 +18,13 @@ caches, or republished skills with unclear licensing.
 - video planning and implementation with React and Remotion;
 - context engineering for compact prompts and reliable handoffs;
 - CEO, marketer, design reviewer, video producer, and context engineer
-  subagents;
+  subagents, plus engineer, QA reviewer, and product editor;
 - a conflict-safe selective installer, diagnostics, and host adapters;
 - local MLX documentation and setup helpers without model weights.
 
 ## Install on a new computer
 
-You need Git, Bash, and macOS or Linux.
+You need Git, Bash, Python 3, and macOS or Linux.
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
@@ -74,6 +74,8 @@ show the exact command before running it.
 | `design` | UI/UX skill and design reviewer |
 | `video` | Remotion skill and video producer |
 | `context` | Context engineering skill and subagent |
+| `software` | Engineer, QA reviewer, software delivery, and quality review |
+| `content` | Product editor and skills for documentation and content |
 | `local-models` | Documentation and MLX helpers only; no models |
 | `all` | Every maintained profile |
 
@@ -90,6 +92,29 @@ Install one component:
 ./scripts/install.sh --component skill:copywriting
 ```
 
+## CEO and subagents
+
+The CEO reads the catalog, applies its own skills, decomposes the goal, and
+recommends specialists. Skill recommendations are advisory: every subagent
+independently selects all useful skills within its task and permissions, then
+reports what it considered and applied.
+
+The security reviewer is deliberately isolated from optional skills so that a
+reviewed component cannot weaken the control that evaluates it.
+
+```bash
+~/.agents/tools/team/team.sh list --type agent
+~/.agents/tools/team/team.sh recommend --tags software,quality
+~/.agents/tools/team/team.sh plan \
+  --goal "Prepare a verified release" \
+  --tags software,quality,release
+```
+
+The CEO dispatches tasks through the selected host's native subagent mechanism.
+Subagents cannot create nested subagents; requests for another specialist return
+to the CEO. See [Architecture](docs/ARCHITECTURE.md) and
+[Orchestration](docs/ORCHESTRATION.md).
+
 ## Connect AI tools
 
 ```bash
@@ -98,9 +123,10 @@ Install one component:
 ./scripts/connect.sh --host gemini
 ```
 
-Adapters create links to installed skills. They do not overwrite a host's
-global instruction file. For another tool, point the agent to
-`~/.agents/AGENTS.md` and `~/.agents/CONNECT.md`.
+Adapters create skill links and host-native subagent wrappers. They do not
+overwrite a host's global instruction file. For another tool, point the agent
+to `~/.agents/AGENTS.md` and `~/.agents/CONNECT.md`. See
+[Host support](docs/HOSTS.md).
 
 ## Update
 
@@ -111,6 +137,10 @@ global instruction file. For another tool, point the agent to
 The installer never silently replaces a changed file. It reports a conflict.
 Use `--force` only when you intentionally want replacement, preferably after
 committing personal changes to Git.
+
+During migration from an older installation, use `--preserve-agents-file` with
+`--force` to update managed components and the catalog without replacing your
+personal `~/.agents/AGENTS.md`.
 
 ## Local models
 
@@ -135,7 +165,11 @@ library/skills/   original skills
 library/agents/   subagent prompts
 library/rules/    shared rules
 library/models/   documentation and setup helpers
+library/tools/    local catalog and coordination tools
+library/orchestration/ task, result, and state contracts
 profiles/         ready-made selections
+docs/             architecture, orchestration, and host support
+examples/         validated task and result packet examples
 scripts/          install, connect, update, and doctor
 tests/            isolated installation checks
 ```

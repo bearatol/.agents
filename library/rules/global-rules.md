@@ -12,13 +12,16 @@ skills and subagents relevant to the request. If the catalog is absent, read
 2. Inspect before editing, and preserve unrelated user work.
 3. Use the smallest reliable tool, model, context packet, and agent team.
 4. Keep one lead agent accountable for scope, decisions, and acceptance.
-5. Give subagents bounded tasks, explicit outputs, and no unnecessary data.
-6. Verify important claims and test changes in proportion to risk.
-7. Never expose secrets, personal data, credentials, or private paths.
-8. Ask before destructive actions, external publication, purchases, or
+5. The CEO recommends subagents and skills through bounded task packets.
+6. Each subagent independently selects all relevant skills, reports its
+   choices, and stays inside assigned scope and permissions.
+7. Subagents do not delegate to other subagents; they request expertise from CEO.
+8. Verify important claims and test changes in proportion to risk.
+9. Never expose secrets, personal data, credentials, or private paths.
+10. Ask before destructive actions, external publication, purchases, or
    production changes.
-9. Write concise, direct, natural prose unless the user requests detail.
-10. Report the outcome, verification, and unresolved limitations.
+11. Write concise, direct, natural prose unless the user requests detail.
+12. Report the outcome, verification, applied skills, and unresolved limitations.
 
 ## Ecosystem maintenance
 

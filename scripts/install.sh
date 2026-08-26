@@ -10,6 +10,8 @@ source "$SCRIPT_DIR/lib.sh"
 ROOT="$(repo_root)"
 DEST_HOME="$(agents_home)"
 validate_agents_home "$DEST_HOME"
+STATE_FILE="$DEST_HOME/.ecosystem-state.json"
+STATE_TOOL="$ROOT/scripts/state.py"
 
 declare -a PROFILES=()
 declare -a COMPONENTS=()
@@ -17,11 +19,13 @@ declare -a HOSTS=()
 FORCE=0
 DRY_RUN=0
 ROOT_FILES=1
+PRESERVE_AGENTS_FILE=0
 
 usage() {
   printf '%s\n' "Usage: $0 --profile NAME [--profile NAME ...] [options]"
   printf '%s\n' "       $0 --component KIND:NAME [--component KIND:NAME ...] [options]"
-  printf '%s\n' "Options: --host codex|claude|gemini|generic  --force  --dry-run  --no-root-files"
+  printf '%s\n' "Options: --host codex|claude|gemini|generic  --force  --dry-run"
+  printf '%s\n' "         --no-root-files  --preserve-agents-file"
 }
 
 while [[ $# -gt 0 ]]; do
@@ -44,12 +48,30 @@ while [[ $# -gt 0 ]]; do
     --force) FORCE=1; shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --no-root-files) ROOT_FILES=0; shift ;;
+    --preserve-agents-file) PRESERVE_AGENTS_FILE=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) usage; fail "unknown argument: $1" ;;
   esac
 done
 
 [[ ${#PROFILES[@]} -gt 0 || ${#COMPONENTS[@]} -gt 0 ]] || fail "select at least one profile or component"
+
+state_matches() {
+  local component_id="$1"
+  local path="$2"
+  command -v python3 >/dev/null 2>&1 || return 1
+  python3 "$STATE_TOOL" matches --state "$STATE_FILE" --id "$component_id" \
+    --path "$path" >/dev/null 2>&1
+}
+
+state_record() {
+  local component_id="$1"
+  local source_path="$2"
+  local installed_path="$3"
+  command -v python3 >/dev/null 2>&1 || return 0
+  python3 "$STATE_TOOL" set --state "$STATE_FILE" --id "$component_id" \
+    --source "$source_path" --installed "$installed_path"
+}
 
 TEMP_COMPONENTS="$(mktemp)"
 TEMP_INSTALLED="$(mktemp)"
@@ -79,7 +101,8 @@ while IFS= read -r -d '' component; do
 done < <(awk '!seen[$0]++' "$TEMP_COMPONENTS" | mapfile_compat)
 
 if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
-  mkdir -p "$DEST_HOME/skills" "$DEST_HOME/agents" "$DEST_HOME/rules" "$DEST_HOME/local-models"
+  mkdir -p "$DEST_HOME/skills" "$DEST_HOME/agents" "$DEST_HOME/rules" \
+    "$DEST_HOME/local-models" "$DEST_HOME/tools"
 fi
 
 CONFLICTS=0
@@ -98,12 +121,17 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
     if diff -qr "$source_path" "$destination_path" >/dev/null 2>&1; then
       printf 'unchanged  %s\n' "$component"
       printf '%s\n' "$component" >> "$TEMP_INSTALLED"
+      [[ $DRY_RUN -eq 1 ]] || state_record "$component" "$source_path" "$destination_path"
       continue
     fi
     if [[ $FORCE -ne 1 ]]; then
-      printf 'conflict   %s (%s)\n' "$component" "$destination_path" >&2
-      CONFLICTS=$((CONFLICTS + 1))
-      continue
+      if state_matches "$component" "$destination_path"; then
+        printf 'updating   %s\n' "$component"
+      else
+        printf 'conflict   %s (%s)\n' "$component" "$destination_path" >&2
+        CONFLICTS=$((CONFLICTS + 1))
+        continue
+      fi
     fi
   fi
 
@@ -122,27 +150,37 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
   fi
   printf 'installed  %s\n' "$component"
   printf '%s\n' "$component" >> "$TEMP_INSTALLED"
+  state_record "$component" "$source_path" "$destination_path"
   INSTALLED=$((INSTALLED + 1))
 done
 
-if [[ $DRY_RUN -eq 0 ]]; then
+if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
   install_root_file() {
     local source_file="$1"
     local destination_file="$2"
+    local state_id="root:$(basename "$destination_file")"
     if [[ -e "$destination_file" ]] && ! diff -q "$source_file" "$destination_file" >/dev/null 2>&1; then
       if [[ $FORCE -ne 1 ]]; then
-        printf 'conflict   managed file (%s)\n' "$destination_file" >&2
-        CONFLICTS=$((CONFLICTS + 1))
-        return
+        if state_matches "$state_id" "$destination_file"; then
+          printf 'updating   managed file (%s)\n' "$destination_file"
+        else
+          printf 'conflict   managed file (%s)\n' "$destination_file" >&2
+          CONFLICTS=$((CONFLICTS + 1))
+          return
+        fi
       fi
     elif [[ -e "$destination_file" ]]; then
+      state_record "$state_id" "$source_file" "$destination_file"
       return
     fi
     cp "$source_file" "$destination_file"
+    state_record "$state_id" "$source_file" "$destination_file"
   }
 
   install_root_file "$ROOT/CONNECT.md" "$DEST_HOME/CONNECT.md"
-  install_root_file "$ROOT/AGENTS.md" "$DEST_HOME/AGENTS.md"
+  if [[ $PRESERVE_AGENTS_FILE -eq 0 ]]; then
+    install_root_file "$ROOT/AGENTS.md" "$DEST_HOME/AGENTS.md"
+  fi
   install_root_file "$ROOT/catalog/catalog.json" "$DEST_HOME/catalog.json"
 fi
 

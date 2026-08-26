@@ -50,11 +50,28 @@ link_skills() {
   done
 }
 
+render_agents() {
+  local host="$1"
+  local target_root="$2"
+  local team_tool="$DEST_HOME/tools/team/team.sh"
+  [[ -x "$team_tool" ]] || fail "install the core profile before connecting subagents"
+  "$team_tool" --home "$DEST_HOME" render-host --host "$host" --target "$target_root"
+}
+
 for host in "${HOSTS[@]}"; do
   case "$host" in
-    codex) link_skills "$HOME/.codex/skills" ;;
-    claude) link_skills "$HOME/.claude/skills" ;;
-    gemini) link_skills "$HOME/.gemini/skills" ;;
+    codex)
+      link_skills "$HOME/.codex/skills"
+      render_agents codex "$HOME/.codex/agents"
+      ;;
+    claude)
+      link_skills "$HOME/.claude/skills"
+      render_agents claude "$HOME/.claude/agents"
+      ;;
+    gemini)
+      link_skills "$HOME/.gemini/skills"
+      render_agents gemini "$HOME/.gemini/agents"
+      ;;
     generic)
       printf 'generic host: point the agent to %s/AGENTS.md and %s/CONNECT.md\n' "$DEST_HOME" "$DEST_HOME"
       ;;

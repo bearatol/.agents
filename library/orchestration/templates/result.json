@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "task_id": "task-001",
+  "agent": "agent:marketer",
+  "status": "complete",
+  "summary": "Concise outcome of the specialist task.",
+  "artifacts": [],
+  "skills_considered": ["skill:market-research", "skill:positioning"],
+  "skills_applied": ["skill:market-research"],
+  "skill_gaps": [],
+  "evidence": ["Specific source, test, or observation"],
+  "risks": [],
+  "recommended_specialist": null,
+  "next_action": null
+}

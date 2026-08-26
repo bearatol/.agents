@@ -19,13 +19,13 @@
 - планирование и разработку видео на React и Remotion;
 - context engineering для компактных промптов и передачи задач;
 - субагентов CEO, маркетолога, дизайн-ревьюера, видеопродюсера и context
-  engineer;
+  engineer, а также engineer, QA reviewer и product editor;
 - безопасный выборочный установщик, диагностику и адаптеры для разных агентов;
 - инструкции и скрипты для локального MLX без весов моделей.
 
 ## Установка на новый компьютер
 
-Нужны Git, Bash и macOS или Linux.
+Нужны Git, Bash, Python 3 и macOS или Linux.
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
@@ -75,6 +75,8 @@ Do not overwrite existing files without asking.
 | `design` | UI/UX skill и дизайн-ревьюер |
 | `video` | Remotion skill и видеопродюсер |
 | `context` | Context engineering skill и субагент |
+| `software` | Engineer, QA reviewer, software delivery и quality review |
+| `content` | Product editor и набор скиллов для документации и контента |
 | `local-models` | Только описание и MLX-скрипты, без моделей |
 | `all` | Все поддерживаемые профили |
 
@@ -91,6 +93,29 @@ Do not overwrite existing files without asking.
 ./scripts/install.sh --component skill:copywriting
 ```
 
+## CEO и субагенты
+
+CEO читает каталог, применяет собственные skills, разбивает цель на задания и
+рекомендует подходящих специалистов. Рекомендации skills не обязательны:
+каждый субагент самостоятельно выбирает все нужные ему skills в пределах своей
+задачи и прав, а затем сообщает, что рассмотрел и применил.
+
+Security reviewer намеренно изолирован от дополнительных skills, чтобы
+проверяемый компонент не мог ослабить контролирующий его механизм.
+
+```bash
+~/.agents/tools/team/team.sh list --type agent
+~/.agents/tools/team/team.sh recommend --tags software,quality
+~/.agents/tools/team/team.sh plan \
+  --goal "Подготовить проверенный релиз" \
+  --tags software,quality,release
+```
+
+CEO передаёт задания через нативный механизм субагентов выбранного AI-хоста.
+Субагенты не создают вложенных субагентов: если нужен другой специалист, запрос
+возвращается CEO. Подробнее: [архитектура](docs/ARCHITECTURE.md) и
+[протокол оркестрации](docs/ORCHESTRATION.md).
+
 ## Подключение AI-инструментов
 
 ```bash
@@ -100,8 +125,9 @@ Do not overwrite existing files without asking.
 ```
 
 Адаптеры создают ссылки на установленные скиллы. Они не перезаписывают
-глобальные правила конкретного инструмента. Для другого агента укажите ему
-файлы `~/.agents/AGENTS.md` и `~/.agents/CONNECT.md`.
+глобальные правила конкретного инструмента и создают безопасные обёртки
+субагентов. Для другого агента укажите ему файлы `~/.agents/AGENTS.md` и
+`~/.agents/CONNECT.md`. См. [матрицу хостов](docs/HOSTS.md).
 
 ## Обновление
 
@@ -112,6 +138,9 @@ Do not overwrite existing files without asking.
 Установщик не заменяет изменённый файл молча. Он сообщает о конфликте. Для
 осознанной замены существует `--force`; перед его использованием сохраните
 свои изменения в Git.
+
+При миграции со старой установки добавьте `--preserve-agents-file` к `--force`:
+компоненты и каталог обновятся, а личный `~/.agents/AGENTS.md` сохранится.
 
 ## Локальные модели
 
@@ -136,7 +165,11 @@ library/skills/   оригинальные скиллы
 library/agents/   промпты субагентов
 library/rules/    общие правила
 library/models/   описания и установочные скрипты
+library/tools/    локальные инструменты каталога и координации
+library/orchestration/ схемы заданий, результатов и состояния
 profiles/         готовые подборки
+docs/             архитектура, оркестрация и поддержка AI-хостов
+examples/         проверяемые примеры пакетов задач и результатов
 scripts/          установка, подключение, обновление и doctor
 tests/            изолированная проверка установки
 ```
