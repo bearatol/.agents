@@ -55,12 +55,16 @@ TEMP_COMPONENTS="$(mktemp)"
 TEMP_INSTALLED="$(mktemp)"
 TEMP_MERGED="$(mktemp)"
 trap 'rm -f "$TEMP_COMPONENTS" "$TEMP_INSTALLED" "$TEMP_MERGED"' EXIT
-for profile in "${PROFILES[@]}"; do
-  expand_profile "$ROOT" "$profile" >> "$TEMP_COMPONENTS"
-done
-for component in "${COMPONENTS[@]}"; do
-  printf '%s\n' "$component" >> "$TEMP_COMPONENTS"
-done
+if [[ ${#PROFILES[@]} -gt 0 ]]; then
+  for profile in "${PROFILES[@]}"; do
+    expand_profile "$ROOT" "$profile" >> "$TEMP_COMPONENTS"
+  done
+fi
+if [[ ${#COMPONENTS[@]} -gt 0 ]]; then
+  for component in "${COMPONENTS[@]}"; do
+    printf '%s\n' "$component" >> "$TEMP_COMPONENTS"
+  done
+fi
 
 mapfile_compat() {
   local line
@@ -153,7 +157,9 @@ if [[ $DRY_RUN -eq 0 ]]; then
   if [[ -f "$DEST_HOME/.ecosystem-profiles" ]]; then
     cat "$DEST_HOME/.ecosystem-profiles" > "$TEMP_MERGED"
   fi
-  printf '%s\n' "${PROFILES[@]}" >> "$TEMP_MERGED"
+  if [[ ${#PROFILES[@]} -gt 0 ]]; then
+    printf '%s\n' "${PROFILES[@]}" >> "$TEMP_MERGED"
+  fi
   awk 'NF && !seen[$0]++' "$TEMP_MERGED" > "$DEST_HOME/.ecosystem-profiles"
 fi
 
