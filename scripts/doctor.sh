@@ -32,7 +32,8 @@ else
   python3 -m json.tool "$ROOT/catalog/catalog.json" >/dev/null || error "invalid catalog JSON"
 fi
 
-if grep -R -n -E --exclude-dir=.git --exclude='doctor.sh' --exclude='*.md.example' \
+if grep -R -n -E --exclude-dir=.git --exclude='doctor.sh' \
+  --exclude='README*.md' --exclude='*.md.example' \
   '[А-Яа-яЁё]' "$ROOT" >/dev/null 2>&1; then
   error "Cyrillic text found in machine-facing repository content"
 fi

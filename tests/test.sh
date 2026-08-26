@@ -10,6 +10,10 @@ trap 'rm -rf "$TEST_HOME"' EXIT
 
 export AGENTS_HOME="$TEST_HOME/.agents"
 
+[[ -f "$ROOT/README.md" ]]
+[[ -f "$ROOT/README.en.md" ]]
+[[ -f "$ROOT/README.zh-CN.md" ]]
+
 "$ROOT/scripts/install.sh" --profile all --host generic
 "$ROOT/scripts/doctor.sh"
 

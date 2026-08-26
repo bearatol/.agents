@@ -1,14 +1,31 @@
 # Agent Ecosystem
 
-A portable, selective toolkit of original English-language skills, subagent
-prompts, operating rules, and local-model setup helpers. It installs into the
-shared `~/.agents` directory so multiple AI coding and writing tools can use
-one source of truth.
+[Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-The repository contains no model weights, credentials, virtual environments,
-or republished unlicensed prompts.
+Набор оригинальных скиллов, субагентов, общих правил и скриптов, который
+работает через единый глобальный каталог `~/.agents`. Вы выбираете только
+нужные профили и подключаете их к Codex, Claude Code, Gemini или другому
+агенту.
 
-## Quick start
+Репозиторий не содержит весов моделей, секретов, виртуальных окружений,
+кэшей и перепубликованных скиллов с неясной лицензией.
+
+## Что вы получите
+
+- 23 маркетинговых скилла: исследования, позиционирование, тексты, email,
+  реклама, контент, CRO и запуск кампаний;
+- естественный стиль текста без канцелярита и шаблонных фраз;
+- UI/UX-процесс от пользовательского сценария до дизайн-системы;
+- планирование и разработку видео на React и Remotion;
+- context engineering для компактных промптов и передачи задач;
+- субагентов CEO, маркетолога, дизайн-ревьюера, видеопродюсера и context
+  engineer;
+- безопасный выборочный установщик, диагностику и адаптеры для разных агентов;
+- инструкции и скрипты для локального MLX без весов моделей.
+
+## Установка на новый компьютер
+
+Нужны Git, Bash и macOS или Linux.
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
@@ -16,14 +33,29 @@ cd agent-ecosystem
 ./scripts/bootstrap.sh
 ```
 
-For a non-interactive installation:
+Интерактивный установщик покажет профили, спросит, что установить, и предложит
+подключить выбранные AI-инструменты. По умолчанию файлы устанавливаются в
+`~/.agents`.
+
+Автоматическая установка без вопросов:
 
 ```bash
-./scripts/install.sh --profile core --profile marketing --host codex --host claude
+./scripts/install.sh \
+  --profile core \
+  --profile marketing \
+  --host codex \
+  --host claude
+```
+
+Проверка после установки:
+
+```bash
 ./scripts/doctor.sh
 ```
 
-Ask any compatible agent:
+## Можно поручить установку агенту
+
+После клонирования отправьте любому агенту этот запрос:
 
 ```text
 Read CONNECT.md in this repository. Help me choose the smallest profiles for
@@ -31,30 +63,104 @@ my work, install them into ~/.agents, connect my agent hosts, and run doctor.
 Do not overwrite existing files without asking.
 ```
 
-## Profiles
+Агент прочитает каталог, предложит минимальный набор и покажет команду до её
+выполнения.
 
-| Profile | Purpose |
+## Профили
+
+| Профиль | Содержимое |
 | --- | --- |
-| `core` | Governance, routing, discovery, and natural writing |
-| `marketing` | 23 original marketing capabilities and a marketer subagent |
-| `design` | Product UI/UX workflow and design reviewer |
-| `video` | Remotion planning and implementation workflow |
-| `context` | Context budgeting, compression, and handoff practices |
-| `local-models` | Documentation and scripts; never model weights |
-| `all` | Every maintained profile |
+| `core` | CEO, роутинг, поиск скиллов, правила и естественный текст |
+| `marketing` | 23 маркетинговых скилла и субагент-маркетолог |
+| `design` | UI/UX skill и дизайн-ревьюер |
+| `video` | Remotion skill и видеопродюсер |
+| `context` | Context engineering skill и субагент |
+| `local-models` | Только описание и MLX-скрипты, без моделей |
+| `all` | Все поддерживаемые профили |
 
-List exact contents with `./scripts/list.sh`.
+Посмотреть точный состав:
 
-## Design principles
+```bash
+./scripts/list.sh
+./scripts/list.sh --profile marketing
+```
 
-- Install only what the user selects.
-- Keep `~/.agents` vendor-neutral and portable.
-- Prefer original skills over copied prompt collections.
-- Preserve user files; conflicts require an explicit `--force`.
-- Pin or document external dependencies rather than hiding them.
-- Keep secrets, model weights, caches, and machine-specific paths out of Git.
-- Treat catalog metadata as the source of truth and update it with every
-  component change.
+Можно поставить один компонент:
 
-See [CONNECT.md](CONNECT.md), [SECURITY.md](SECURITY.md), and
-[CONTRIBUTING.md](CONTRIBUTING.md).
+```bash
+./scripts/install.sh --component skill:copywriting
+```
+
+## Подключение AI-инструментов
+
+```bash
+./scripts/connect.sh --host codex
+./scripts/connect.sh --host claude
+./scripts/connect.sh --host gemini
+```
+
+Адаптеры создают ссылки на установленные скиллы. Они не перезаписывают
+глобальные правила конкретного инструмента. Для другого агента укажите ему
+файлы `~/.agents/AGENTS.md` и `~/.agents/CONNECT.md`.
+
+## Обновление
+
+```bash
+./scripts/update.sh
+```
+
+Установщик не заменяет изменённый файл молча. Он сообщает о конфликте. Для
+осознанной замены существует `--force`; перед его использованием сохраните
+свои изменения в Git.
+
+## Локальные модели
+
+Профиль `local-models` устанавливает только документацию и безопасные
+loopback-скрипты. Веса и `.venv` не попадают в репозиторий.
+
+```bash
+./scripts/install.sh --profile local-models
+cd ~/.agents/local-models/mlx-local-runtime
+./setup.sh --version VERIFIED_VERSION
+./run.sh --model /absolute/path/to/model --port 9944
+```
+
+MLX helper предназначен для Mac с Apple Silicon. Установку Python-пакетов и
+загрузку модели пользователь запускает отдельно.
+
+## Структура
+
+```text
+catalog/          единый каталог компонентов
+library/skills/   оригинальные скиллы
+library/agents/   промпты субагентов
+library/rules/    общие правила
+library/models/   описания и установочные скрипты
+profiles/         готовые подборки
+scripts/          установка, подключение, обновление и doctor
+tests/            изолированная проверка установки
+```
+
+## Безопасность и лицензии
+
+Содержимое репозитория создано специально для проекта и опубликовано под MIT.
+Сторонние материалы нельзя добавлять без проверки права на распространение.
+Удаление чужой лицензии или небольшая переработка текста не делает материал
+оригинальным.
+
+Установщик не загружает модели, не запускает сетевые сервисы автоматически и
+не перезаписывает конфликтующие пользовательские файлы без `--force`. Подробнее:
+[SECURITY.md](SECURITY.md) и [THIRD_PARTY.md](THIRD_PARTY.md).
+
+## Участие в разработке
+
+Новый компонент должен быть на английском языке, иметь запись в каталоге,
+входить хотя бы в один профиль и проходить:
+
+```bash
+./tests/test.sh
+./scripts/doctor.sh
+git diff --check
+```
+
+См. [CONTRIBUTING.md](CONTRIBUTING.md). Лицензия: [MIT](LICENSE).
