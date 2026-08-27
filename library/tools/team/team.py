@@ -351,7 +351,7 @@ def cmd_render_host(args, catalog, home):
 
 
 def parser():
-    result = argparse.ArgumentParser(description="Inspect and coordinate the Agent Ecosystem team")
+    result = argparse.ArgumentParser(description="Inspect and coordinate the .agents team")
     result.add_argument("--home", default=os.environ.get("AGENTS_HOME", str(pathlib.Path.home() / ".agents")))
     sub = result.add_subparsers(dest="command", required=True)
 

@@ -1,6 +1,6 @@
-<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Agent Ecosystem 架构横幅" width="100%"></p>
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents 架构横幅" width="100%"></p>
 
-# Agent Ecosystem
+# .agents
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
@@ -26,16 +26,16 @@ Claude Code、Gemini、Koda、Yandex SourceCraft 或其他 AI 代理。
 需要 Git 和 Python 3。macOS/Linux/WSL 使用 Bash，Windows 使用 PowerShell。
 
 ```bash
-git clone https://github.com/bearatol/agent-ecosystem.git
-cd agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+cd .agents
 ./scripts/bootstrap.sh
 ```
 
 Windows PowerShell：
 
 ```powershell
-git clone https://github.com/bearatol/agent-ecosystem.git
-Set-Location agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+Set-Location .agents
 .\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
 .\scripts\doctor.ps1
 ```

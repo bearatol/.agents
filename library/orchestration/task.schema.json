@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bearatol/agent-ecosystem/task.schema.json",
-  "title": "Agent Ecosystem Task Packet",
+  "$id": "https://github.com/bearatol/.agents/task.schema.json",
+  "title": ".agents Task Packet",
   "type": "object",
   "required": ["schema_version", "task_id", "title", "objective", "assigned_agent", "scope", "permissions", "acceptance_criteria", "status"],
   "properties": {

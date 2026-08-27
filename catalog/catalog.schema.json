@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://github.com/bearatol/agent-ecosystem/catalog.schema.json",
-  "title": "Agent Ecosystem Catalog",
+  "$id": "https://github.com/bearatol/.agents/catalog.schema.json",
+  "title": ".agents Catalog",
   "type": "object",
   "required": ["schema_version", "ecosystem_version", "language", "license", "components"],
   "properties": {

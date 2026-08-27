@@ -35,7 +35,13 @@ else
   python3 "$ROOT/scripts/check_repository.py" "$ROOT" || error "repository text validation failed"
 fi
 
-if find "$ROOT" -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \
+if git -C "$ROOT" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if git -C "$ROOT" ls-files -co --exclude-standard -- \
+    ':(glob)**/*.safetensors' ':(glob)**/*.gguf' ':(glob)**/*.bin' \
+    ':(glob)**/*.pem' ':(glob)**/*.key' ':(glob)**/.env' | grep -q .; then
+    error "forbidden secret or model artifact found"
+  fi
+elif find "$ROOT" -type f \( -name '*.safetensors' -o -name '*.gguf' -o -name '*.bin' \
   -o -name '*.pem' -o -name '*.key' -o -name '.env' \) -print -quit | grep -q .; then
   error "forbidden secret or model artifact found"
 fi

@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640" role="img" aria-labelledby="title desc">
-  <title id="title">Agent Ecosystem</title>
+  <title id="title">.agents</title>
   <desc id="desc">A portable system connecting skills, agents, rules, and models to Codex, Claude, Gemini, Koda, and SourceCraft.</desc>
   <defs>
     <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
@@ -41,23 +41,21 @@
   <ellipse cx="833" cy="320" rx="360" ry="285" fill="url(#hub)"/>
   <path d="M40 90H330M40 550H410M1260 82H1560M1200 558H1560" stroke="#61e7ff" stroke-opacity=".09"/>
 
-  <text class="title" x="78" y="208">AGENT</text>
-  <text class="title" x="78" y="290">ECOSYSTEM</text>
-  <path d="M80 333H192" stroke="#ffca68" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="80" cy="333" r="5" fill="#ffca68" filter="url(#glow)"/>
-  <text class="subtitle" x="78" y="390">One portable system. Any agent.</text>
-  <text class="subtitle" x="78" y="430">Only what you need.</text>
+  <text class="title" x="78" y="270">.agents</text>
+  <path d="M80 310H192" stroke="#ffca68" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="80" cy="310" r="5" fill="#ffca68" filter="url(#glow)"/>
+  <text class="subtitle" x="78" y="366">One portable system. Any agent.</text>
+  <text class="subtitle" x="78" y="406">Only what you need.</text>
 
   <g class="route">
     <path d="M674 183L735 244" stroke="url(#cyanLine)"/>
     <path d="M674 457L735 396" stroke="url(#violetLine)"/>
-    <path d="M890 244L950 183" stroke="url(#greenLine)"/>
-    <path d="M890 396L950 457" stroke="url(#greenLine)"/>
-    <path d="M1058 183H1100Q1125 183 1125 158V118Q1125 96 1147 96H1260" stroke="url(#cyanLine)"/>
-    <path d="M1058 183H1115Q1140 183 1140 208V218Q1140 240 1162 240H1260" stroke="url(#violetLine)"/>
-    <path d="M1058 320H1260" stroke="url(#cyanLine)"/>
-    <path d="M1058 457H1115Q1140 457 1140 432V422Q1140 400 1162 400H1260" stroke="url(#greenLine)"/>
-    <path d="M1058 457H1100Q1125 457 1125 482V522Q1125 544 1147 544H1260" stroke="#ffca68" stroke-opacity=".78"/>
+    <path d="M894 320C920 320 920 464 946 464" stroke="url(#greenLine)"/>
+    <path d="M1054 425C1145 425 1145 96 1260 96" stroke="url(#cyanLine)"/>
+    <path d="M1054 442C1145 442 1145 240 1260 240" stroke="url(#violetLine)"/>
+    <path d="M1054 459C1145 459 1145 320 1260 320" stroke="#61b7ff" stroke-opacity=".78"/>
+    <path d="M1054 476C1145 476 1145 400 1260 400" stroke="url(#greenLine)"/>
+    <path d="M1054 493C1145 493 1145 544 1260 544" stroke="#ffca68" stroke-opacity=".78"/>
   </g>
 
   <g transform="translate(570 122)">

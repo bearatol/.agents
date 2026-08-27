@@ -1,6 +1,6 @@
-<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Agent Ecosystem architecture banner" width="100%"></p>
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents architecture banner" width="100%"></p>
 
-# Agent Ecosystem
+# .agents
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
@@ -29,16 +29,16 @@ caches, or republished skills with unclear licensing.
 You need Git and Python 3. Use Bash on macOS/Linux/WSL or PowerShell on Windows.
 
 ```bash
-git clone https://github.com/bearatol/agent-ecosystem.git
-cd agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+cd .agents
 ./scripts/bootstrap.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-git clone https://github.com/bearatol/agent-ecosystem.git
-Set-Location agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+Set-Location .agents
 .\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
 .\scripts\doctor.ps1
 ```

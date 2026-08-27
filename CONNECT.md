@@ -56,7 +56,7 @@ The default destination is `${AGENTS_HOME:-$HOME/.agents}`. Override it for a
 test or isolated installation:
 
 ```bash
-AGENTS_HOME=/tmp/agent-ecosystem-test ./scripts/install.sh --profile core
+AGENTS_HOME=/tmp/.agents-test ./scripts/install.sh --profile core
 ```
 
 ## Supported host adapters

@@ -3,11 +3,22 @@
 import argparse
 import pathlib
 import re
+import subprocess
 import sys
 
 
 CYRILLIC = re.compile(r"[\u0400-\u04ff]")
 PERSONAL_PATH = re.compile(r"/(?:Users|home)/[^/\s]+")
+
+
+def repository_files(root):
+    result = subprocess.run(
+        ["git", "-C", str(root), "ls-files", "-co", "--exclude-standard", "-z"],
+        capture_output=True,
+    )
+    if result.returncode != 0:
+        return root.rglob("*")
+    return (root / pathlib.Path(path.decode()) for path in result.stdout.split(b"\0") if path)
 
 
 def main():
@@ -16,7 +27,7 @@ def main():
     args = parser.parse_args()
     root = pathlib.Path(args.root).resolve()
     errors = []
-    for path in root.rglob("*"):
+    for path in repository_files(root):
         if not path.is_file():
             continue
         relative = path.relative_to(root)

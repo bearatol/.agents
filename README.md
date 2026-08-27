@@ -1,6 +1,6 @@
-<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Архитектура Agent Ecosystem" width="100%"></p>
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Архитектура .agents" width="100%"></p>
 
-# Agent Ecosystem
+# .agents
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
@@ -31,16 +31,16 @@ Yandex SourceCraft или другому
 Нужны Git и Python 3. На macOS/Linux/WSL используется Bash, на Windows — PowerShell.
 
 ```bash
-git clone https://github.com/bearatol/agent-ecosystem.git
-cd agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+cd .agents
 ./scripts/bootstrap.sh
 ```
 
 Windows PowerShell:
 
 ```powershell
-git clone https://github.com/bearatol/agent-ecosystem.git
-Set-Location agent-ecosystem
+git clone https://github.com/bearatol/.agents.git
+Set-Location .agents
 .\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
 .\scripts\doctor.ps1
 ```

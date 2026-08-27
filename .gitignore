@@ -24,4 +24,22 @@ models/**/*.pth
 models/**/blobs/
 models/**/snapshots/
 local-llm/
+
+# Local installation state retained alongside this source checkout.
+/.ecosystem-installed
+/.ecosystem-profiles
+/.ecosystem-state.json
+/.skill-lock.json
+/CATALOG.md
+/agents/
+/catalog.json
+/local-models/
+/mcp/
+/migrations.json
+/models/
+/orchestration/
+/plugins/
+/rules/
+/skills/
+/tools/
 backups/

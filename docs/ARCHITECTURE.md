@@ -1,6 +1,6 @@
 # Architecture
 
-Agent Ecosystem separates portable expertise from host-specific execution.
+.agents separates portable expertise from host-specific execution.
 
 ```text
 User goal

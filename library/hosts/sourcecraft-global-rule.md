@@ -1,4 +1,4 @@
-# Agent Ecosystem
+# .agents
 
 The canonical cross-agent ecosystem is installed at `~/.agents`.
 

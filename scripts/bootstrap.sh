@@ -10,7 +10,7 @@ if [[ $# -gt 0 ]]; then
   exec "$SCRIPT_DIR/install.sh" "$@"
 fi
 
-printf 'Agent Ecosystem bootstrap\n\n'
+printf '.agents bootstrap\n\n'
 "$SCRIPT_DIR/list.sh"
 printf '\nSelect comma-separated profiles [core]: '
 IFS= read -r profile_input
