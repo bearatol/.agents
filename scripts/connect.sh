@@ -30,6 +30,23 @@ done
 [[ ${#HOSTS[@]} -gt 0 ]] || fail "select at least one host"
 [[ -d "$DEST_HOME/skills" ]] || fail "install a profile before connecting hosts"
 
+TEAM_TOOL="$DEST_HOME/tools/team/team.sh"
+REQUIRES_FOUNDATION=0
+for host in "${HOSTS[@]}"; do
+  case "$host" in
+    codex|claude|gemini|sourcecraft)
+      REQUIRES_FOUNDATION=1
+      ;;
+    koda|generic)
+      ;;
+    *) fail "unsupported host: $host" ;;
+  esac
+done
+
+if [[ $REQUIRES_FOUNDATION -eq 1 && ! -x "$TEAM_TOOL" ]]; then
+  fail "install Foundation (profile core) before connecting subagents"
+fi
+
 link_skills() {
   local target_root="$1"
   assert_no_symlink_traversal "$target_root" "$HOME"
@@ -56,10 +73,8 @@ link_skills() {
 render_agents() {
   local host="$1"
   local target_root="$2"
-  local team_tool="$DEST_HOME/tools/team/team.sh"
-  [[ -x "$team_tool" ]] || fail "install the core profile before connecting subagents"
   assert_no_symlink_traversal "$target_root" "$HOME"
-  "$team_tool" --home "$DEST_HOME" render-host --host "$host" --target "$target_root"
+  "$TEAM_TOOL" --home "$DEST_HOME" render-host --host "$host" --target "$target_root"
 }
 
 install_file_if_free() {

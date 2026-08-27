@@ -12,6 +12,64 @@ export AGENTS_HOME="$TEST_HOME/.agents"
 TEST_USER_HOME="$TEST_HOME/user"
 mkdir -p "$TEST_USER_HOME"
 
+PREFLIGHT_AGENTS_HOME="$TEST_HOME/preflight-agents"
+PREFLIGHT_USER_HOME="$TEST_HOME/preflight-user"
+AGENTS_HOME="$PREFLIGHT_AGENTS_HOME" "$ROOT/scripts/install.sh" \
+  --profile software --no-root-files >/dev/null
+if HOME="$PREFLIGHT_USER_HOME" AGENTS_HOME="$PREFLIGHT_AGENTS_HOME" \
+  "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft \
+  >/dev/null 2>&1; then
+  printf 'missing Foundation preflight unexpectedly succeeded\n' >&2
+  exit 1
+fi
+[[ ! -e "$PREFLIGHT_USER_HOME/.codex" ]]
+[[ ! -e "$PREFLIGHT_USER_HOME/.claude" ]]
+[[ ! -e "$PREFLIGHT_USER_HOME/.gemini" ]]
+[[ ! -e "$PREFLIGHT_USER_HOME/.config" ]]
+[[ ! -e "$PREFLIGHT_USER_HOME/.codeassistant" ]]
+
+QUICK_START_AGENTS_HOME="$TEST_HOME/quick-start-agents"
+QUICK_START_USER_HOME="$TEST_HOME/quick-start-user"
+printf 'software\ncodex\ny\n' | \
+  HOME="$QUICK_START_USER_HOME" AGENTS_HOME="$QUICK_START_AGENTS_HOME" \
+  "$ROOT/scripts/bootstrap.sh" >/dev/null
+grep -qx 'core' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
+grep -qx 'software' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
+[[ -f "$QUICK_START_USER_HOME/.codex/agents/engineer.toml" ]]
+
+INVALID_INPUT_AGENTS_HOME="$TEST_HOME/invalid-input-agents"
+INVALID_INPUT_USER_HOME="$TEST_HOME/invalid-input-user"
+for invalid_host in invalid-host ../codex 'codex;touch' --host; do
+  if printf 'software\n%s\ny\n' "$invalid_host" | \
+    HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
+    "$ROOT/scripts/bootstrap.sh" >/dev/null 2>&1; then
+    printf 'unsupported host unexpectedly succeeded: %s\n' "$invalid_host" >&2
+    exit 1
+  fi
+done
+[[ ! -e "$INVALID_INPUT_AGENTS_HOME" ]]
+[[ ! -e "$INVALID_INPUT_USER_HOME/.codex" ]]
+
+if HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$PREFLIGHT_AGENTS_HOME" \
+  "$ROOT/scripts/connect.sh" --host invalid-host --host codex >/dev/null 2>&1; then
+  printf 'unsupported direct host unexpectedly succeeded\n' >&2
+  exit 1
+fi
+[[ ! -e "$INVALID_INPUT_USER_HOME/.codex" ]]
+
+HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
+  "$ROOT/scripts/bootstrap.sh" --profile software --dry-run >/dev/null
+
+for invalid_work_pack in invalid-pack ../software 'software;touch' --profile; do
+  if printf '%s\ncodex\ny\n' "$invalid_work_pack" | \
+    HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
+    "$ROOT/scripts/bootstrap.sh" >/dev/null 2>&1; then
+    printf 'unsupported work pack unexpectedly succeeded: %s\n' "$invalid_work_pack" >&2
+    exit 1
+  fi
+done
+[[ ! -e "$INVALID_INPUT_AGENTS_HOME" ]]
+
 [[ -f "$ROOT/README.md" ]]
 [[ -f "$ROOT/README.en.md" ]]
 [[ -f "$ROOT/README.zh-CN.md" ]]
