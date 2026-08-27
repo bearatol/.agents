@@ -40,9 +40,11 @@ try {
 
   $CustomizedSkill = Join-Path $env:AGENTS_HOME 'skills/context-engineering/SKILL.md'
   Add-Content -LiteralPath $CustomizedSkill -Value 'local customization'
-  & pwsh -NoProfile -File (Join-Path $RepoRoot 'scripts/install.ps1') `
-    -Profile core -NoRootFiles -Force
-  if ($LASTEXITCODE -eq 0) { throw 'Force accepted a user-modified managed skill.' }
+  $ForceCheck = Start-Process -FilePath 'pwsh' -NoNewWindow -Wait -PassThru -ArgumentList @(
+    '-NoProfile', '-File', (Join-Path $RepoRoot 'scripts/install.ps1'),
+    '-Profile', 'core', '-NoRootFiles', '-Force'
+  )
+  if ($ForceCheck.ExitCode -eq 0) { throw 'Force accepted a user-modified managed skill.' }
   if (-not (Select-String -LiteralPath $CustomizedSkill -SimpleMatch 'local customization')) {
     throw 'Force replaced a user-modified managed skill.'
   }
@@ -54,8 +56,10 @@ try {
   New-Item -ItemType Directory -Force -Path $CodexRoot,$Outside | Out-Null
   New-Item -ItemType Junction -Path (Join-Path $CodexRoot 'skills') -Target $Outside | Out-Null
   $env:USERPROFILE = $ReparseUser
-  & pwsh -NoProfile -File (Join-Path $RepoRoot 'scripts/connect.ps1') -HostName codex
-  if ($LASTEXITCODE -eq 0) { throw 'Host connection followed a junction outside its safety root.' }
+  $ReparseCheck = Start-Process -FilePath 'pwsh' -NoNewWindow -Wait -PassThru -ArgumentList @(
+    '-NoProfile', '-File', (Join-Path $RepoRoot 'scripts/connect.ps1'), '-HostName', 'codex'
+  )
+  if ($ReparseCheck.ExitCode -eq 0) { throw 'Host connection followed a junction outside its safety root.' }
   $env:USERPROFILE = $SafeUserProfile
   Write-Host 'All PowerShell tests passed.'
 }
