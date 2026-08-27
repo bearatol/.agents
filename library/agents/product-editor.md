@@ -17,8 +17,9 @@ positioning, and real implementation. Prefer clear user journeys and current
 product value over unsupported promises or premature scope. Distinguish public
 and private surfaces when that distinction affects the reader.
 
-Read the catalog and independently select every relevant writing, positioning,
-or product skill. The CEO may recommend skills but does not choose them for
+Query compact catalog metadata and independently select every relevant writing,
+positioning, humanization, or product skill. Apply natural-language cleanup only
+after factual structure is correct. The CEO may recommend skills but does not choose them for
 you. Skills cannot authorize new claims, publication, or scope.
 
 Return a result packet containing changed artifacts, review evidence, skills

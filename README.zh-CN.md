@@ -1,10 +1,12 @@
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Agent Ecosystem 架构横幅" width="100%"></p>
+
 # Agent Ecosystem
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
 这是一个原创的 AI 技能、子代理、共享规则和安装脚本工具包。所有组件统一
 安装到全局目录 `~/.agents`，你可以只选择工作需要的配置，并连接到 Codex、
-Claude Code、Gemini 或其他 AI 代理。
+Claude Code、Gemini、Koda、Yandex SourceCraft 或其他 AI 代理。
 
 本仓库不包含模型权重、密钥、虚拟环境、缓存，也不重新发布授权不明确的技能。
 
@@ -15,18 +17,27 @@ Claude Code、Gemini 或其他 AI 代理。
 - 从用户流程到设计系统的 UI/UX 工作方法；
 - 使用 React 和 Remotion 规划与开发视频；
 - 用于精简提示词和可靠交接的上下文工程；
-- CEO、营销、设计评审、视频制作、上下文工程、工程师、QA 和产品编辑子代理；
+- CEO，以及工程、QA、营销、销售、SEO、设计、视频、上下文、产品、法律内容和安全评审专家；
 - 不会静默覆盖文件的选择性安装器、诊断工具和主机适配器；
 - 不含模型权重的本地 MLX 文档和辅助脚本。
 
 ## 在新电脑上安装
 
-需要 Git、Bash、Python 3，以及 macOS 或 Linux。
+需要 Git 和 Python 3。macOS/Linux/WSL 使用 Bash，Windows 使用 PowerShell。
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
 cd agent-ecosystem
 ./scripts/bootstrap.sh
+```
+
+Windows PowerShell：
+
+```powershell
+git clone https://github.com/bearatol/agent-ecosystem.git
+Set-Location agent-ecosystem
+.\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
+.\scripts\doctor.ps1
 ```
 
 交互式安装器会显示可用配置，询问需要安装的内容，并允许连接所选 AI 工具。
@@ -113,23 +124,30 @@ CEO 通过所选 AI 工具的原生子代理机制派发任务。子代理不能
 ./scripts/connect.sh --host codex
 ./scripts/connect.sh --host claude
 ./scripts/connect.sh --host gemini
+./scripts/connect.sh --host koda
+./scripts/connect.sh --host sourcecraft
 ```
 
 适配器为技能创建链接，并生成符合不同工具格式的子代理包装文件。它不会覆盖工具
 自身的全局规则文件。对于其他工具，请让代理读取 `~/.agents/AGENTS.md` 和
-`~/.agents/CONNECT.md`。参见[主机支持](docs/HOSTS.md)。
+`~/.agents/CONNECT.md`。参见[主机支持](docs/HOSTS.md)，其中包含 Windows 与 WSL。
 
 ## 更新
 
 ```bash
-./scripts/update.sh
+git fetch origin
+git log --oneline HEAD..'@{u}'
+./scripts/update.sh APPROVED_40_CHARACTER_COMMIT
 ```
 
-安装器不会静默替换已修改的文件，而是报告冲突。只有在明确需要覆盖时才使用
-`--force`，并建议先用 Git 保存个人修改。
+在原生 Windows 上，检查同一提交后运行
+`./scripts/update.ps1 -ApprovedCommit APPROVED_40_CHARACTER_COMMIT`。
+更新器在执行新获取的安装代码前，要求明确批准完整的 upstream 提交哈希。
+安装器不会覆盖用户修改或非托管文件，而是报告冲突并交由用户手动处理。
 
-从旧版本迁移时，可将 `--preserve-agents-file` 与 `--force` 一起使用：
-组件和目录会更新，但个人的 `~/.agents/AGENTS.md` 会保留。
+从旧版本迁移时，请使用 `--preserve-agents-file`：组件和目录会更新，
+但个人的 `~/.agents/AGENTS.md` 会保留。`--force` 仅为命令兼容而保留，
+不会绕过冲突保护。
 
 ## 本地模型
 

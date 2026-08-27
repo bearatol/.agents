@@ -27,6 +27,9 @@ subagent chooses its own final skills.
   --objective "Update managed components without overwriting user edits" \
   --scope scripts/install.sh \
   --scope scripts/state.py \
+  --authoritative-input catalog/catalog.json \
+  --exclude "unrelated build logs" \
+  --context-budget focused \
   --recommend-skill software-delivery \
   --accept "Existing user modifications remain unchanged" \
   --accept "All installer tests pass" \
@@ -34,8 +37,10 @@ subagent chooses its own final skills.
 ```
 
 The CEO dispatches `task.json` through the host's native subagent tool. The
-specialist reads the catalog, considers every relevant skill, and reports its
-actual choices in a result packet.
+specialist queries compact catalog metadata, considers every relevant skill,
+loads full instructions only for selected skills, and reports its actual choices
+in a result packet. The context budget is soft: evidence and safety take priority
+over token reduction.
 
 ## Validate returned evidence
 

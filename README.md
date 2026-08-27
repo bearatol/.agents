@@ -1,10 +1,13 @@
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Архитектура Agent Ecosystem" width="100%"></p>
+
 # Agent Ecosystem
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
 Набор оригинальных скиллов, субагентов, общих правил и скриптов, который
 работает через единый глобальный каталог `~/.agents`. Вы выбираете только
-нужные профили и подключаете их к Codex, Claude Code, Gemini или другому
+нужные профили и подключаете их к Codex, Claude Code, Gemini, Koda,
+Yandex SourceCraft или другому
 агенту.
 
 Репозиторий не содержит весов моделей, секретов, виртуальных окружений,
@@ -18,19 +21,28 @@
 - UI/UX-процесс от пользовательского сценария до дизайн-системы;
 - планирование и разработку видео на React и Remotion;
 - context engineering для компактных промптов и передачи задач;
-- субагентов CEO, маркетолога, дизайн-ревьюера, видеопродюсера и context
-  engineer, а также engineer, QA reviewer и product editor;
+- CEO и специалистов по разработке, QA, маркетингу, продажам, SEO, дизайну,
+  видео, контексту, продукту, юридическим рискам контента и безопасности diff;
 - безопасный выборочный установщик, диагностику и адаптеры для разных агентов;
 - инструкции и скрипты для локального MLX без весов моделей.
 
 ## Установка на новый компьютер
 
-Нужны Git, Bash, Python 3 и macOS или Linux.
+Нужны Git и Python 3. На macOS/Linux/WSL используется Bash, на Windows — PowerShell.
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
 cd agent-ecosystem
 ./scripts/bootstrap.sh
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/bearatol/agent-ecosystem.git
+Set-Location agent-ecosystem
+.\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
+.\scripts\doctor.ps1
 ```
 
 Интерактивный установщик покажет профили, спросит, что установить, и предложит
@@ -122,25 +134,32 @@ CEO передаёт задания через нативный механизм
 ./scripts/connect.sh --host codex
 ./scripts/connect.sh --host claude
 ./scripts/connect.sh --host gemini
+./scripts/connect.sh --host koda
+./scripts/connect.sh --host sourcecraft
 ```
 
 Адаптеры создают ссылки на установленные скиллы. Они не перезаписывают
 глобальные правила конкретного инструмента и создают безопасные обёртки
 субагентов. Для другого агента укажите ему файлы `~/.agents/AGENTS.md` и
-`~/.agents/CONNECT.md`. См. [матрицу хостов](docs/HOSTS.md).
+`~/.agents/CONNECT.md`. См. [матрицу хостов](docs/HOSTS.md), включая Windows и WSL.
 
 ## Обновление
 
 ```bash
-./scripts/update.sh
+git fetch origin
+git log --oneline HEAD..'@{u}'
+./scripts/update.sh APPROVED_40_CHARACTER_COMMIT
 ```
 
-Установщик не заменяет изменённый файл молча. Он сообщает о конфликте. Для
-осознанной замены существует `--force`; перед его использованием сохраните
-свои изменения в Git.
+В Windows сначала проверьте тот же коммит, затем выполните
+`./scripts/update.ps1 -ApprovedCommit APPROVED_40_CHARACTER_COMMIT`.
+Скрипт обновления не запускает полученный из сети код, пока вы явно не подтвердите
+точный upstream-коммит. Установщик не перезаписывает изменённые пользователем
+или неуправляемые файлы, а сообщает конфликт для ручного решения.
 
-При миграции со старой установки добавьте `--preserve-agents-file` к `--force`:
-компоненты и каталог обновятся, а личный `~/.agents/AGENTS.md` сохранится.
+При миграции со старой установки используйте `--preserve-agents-file`: компоненты
+и каталог обновятся, а личный `~/.agents/AGENTS.md` сохранится. `--force`
+принимается для совместимости команд, но не отключает защиту конфликтов.
 
 ## Локальные модели
 

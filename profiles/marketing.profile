@@ -1,4 +1,6 @@
 agent:marketer
+agent:sales
+agent:seo-researcher
 skill:market-research
 skill:audience-segmentation
 skill:customer-interviews

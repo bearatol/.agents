@@ -16,7 +16,6 @@ STATE_TOOL="$ROOT/scripts/state.py"
 declare -a PROFILES=()
 declare -a COMPONENTS=()
 declare -a HOSTS=()
-FORCE=0
 DRY_RUN=0
 ROOT_FILES=1
 PRESERVE_AGENTS_FILE=0
@@ -24,7 +23,7 @@ PRESERVE_AGENTS_FILE=0
 usage() {
   printf '%s\n' "Usage: $0 --profile NAME [--profile NAME ...] [options]"
   printf '%s\n' "       $0 --component KIND:NAME [--component KIND:NAME ...] [options]"
-  printf '%s\n' "Options: --host codex|claude|gemini|generic  --force  --dry-run"
+  printf '%s\n' "Options: --host codex|claude|gemini|koda|sourcecraft|generic  --force  --dry-run"
   printf '%s\n' "         --no-root-files  --preserve-agents-file"
 }
 
@@ -45,7 +44,7 @@ while [[ $# -gt 0 ]]; do
       HOSTS+=("$2")
       shift 2
       ;;
-    --force) FORCE=1; shift ;;
+    --force) shift ;;
     --dry-run) DRY_RUN=1; shift ;;
     --no-root-files) ROOT_FILES=0; shift ;;
     --preserve-agents-file) PRESERVE_AGENTS_FILE=1; shift ;;
@@ -116,6 +115,7 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
   destination_path="$(component_destination "$DEST_HOME" "$kind" "$name")"
   [[ -e "$source_path" ]] || fail "catalog points to missing source: $source_path"
   [[ "$destination_path" == "$DEST_HOME"/* ]] || fail "destination escaped AGENTS_HOME"
+  assert_no_symlink_traversal "$destination_path" "$DEST_HOME"
 
   if [[ -e "$destination_path" || -L "$destination_path" ]]; then
     if diff -qr "$source_path" "$destination_path" >/dev/null 2>&1; then
@@ -124,14 +124,12 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
       [[ $DRY_RUN -eq 1 ]] || state_record "$component" "$source_path" "$destination_path"
       continue
     fi
-    if [[ $FORCE -ne 1 ]]; then
-      if state_matches "$component" "$destination_path"; then
-        printf 'updating   %s\n' "$component"
-      else
-        printf 'conflict   %s (%s)\n' "$component" "$destination_path" >&2
-        CONFLICTS=$((CONFLICTS + 1))
-        continue
-      fi
+    if state_matches "$component" "$destination_path"; then
+      printf 'updating   %s\n' "$component"
+    else
+      printf 'conflict   %s (%s)\n' "$component" "$destination_path" >&2
+      CONFLICTS=$((CONFLICTS + 1))
+      continue
     fi
   fi
 
@@ -142,6 +140,7 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
 
   parent="$(dirname "$destination_path")"
   mkdir -p "$parent"
+  assert_no_symlink_traversal "$destination_path" "$DEST_HOME"
   if [[ -d "$source_path" ]]; then
     rm -rf "$destination_path"
     cp -R "$source_path" "$destination_path"
@@ -159,15 +158,14 @@ if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
     local source_file="$1"
     local destination_file="$2"
     local state_id="root:$(basename "$destination_file")"
+    assert_no_symlink_traversal "$destination_file" "$DEST_HOME"
     if [[ -e "$destination_file" ]] && ! diff -q "$source_file" "$destination_file" >/dev/null 2>&1; then
-      if [[ $FORCE -ne 1 ]]; then
-        if state_matches "$state_id" "$destination_file"; then
-          printf 'updating   managed file (%s)\n' "$destination_file"
-        else
-          printf 'conflict   managed file (%s)\n' "$destination_file" >&2
-          CONFLICTS=$((CONFLICTS + 1))
-          return
-        fi
+      if state_matches "$state_id" "$destination_file"; then
+        printf 'updating   managed file (%s)\n' "$destination_file"
+      else
+        printf 'conflict   managed file (%s)\n' "$destination_file" >&2
+        CONFLICTS=$((CONFLICTS + 1))
+        return
       fi
     elif [[ -e "$destination_file" ]]; then
       state_record "$state_id" "$source_file" "$destination_file"
@@ -182,6 +180,7 @@ if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
     install_root_file "$ROOT/AGENTS.md" "$DEST_HOME/AGENTS.md"
   fi
   install_root_file "$ROOT/catalog/catalog.json" "$DEST_HOME/catalog.json"
+  install_root_file "$ROOT/catalog/migrations.json" "$DEST_HOME/migrations.json"
 fi
 
 if [[ $DRY_RUN -eq 0 ]]; then

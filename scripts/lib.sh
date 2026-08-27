@@ -20,6 +20,30 @@ validate_agents_home() {
       fail "refusing unsafe AGENTS_HOME: $value"
       ;;
   esac
+  assert_no_symlink_traversal "$value" "$value"
+}
+
+assert_no_symlink_traversal() {
+  local value="$1"
+  local safety_root="$2"
+  [[ "$value" == "$safety_root" || "$value" == "$safety_root"/* ]] || \
+    fail "path escaped safety root: $value"
+  local current="$safety_root"
+  local remaining="${value#"$safety_root"}"
+  remaining="${remaining#/}"
+  local segment
+  [[ ! -L "$current" ]] || fail "refusing symbolic-link traversal: $current"
+  while [[ -n "$remaining" ]]; do
+    segment="${remaining%%/*}"
+    if [[ "$remaining" == */* ]]; then
+      remaining="${remaining#*/}"
+    else
+      remaining=""
+    fi
+    [[ -n "$segment" ]] || continue
+    current="${current%/}/$segment"
+    [[ ! -L "$current" ]] || fail "refusing symbolic-link traversal: $current"
+  done
 }
 
 fail() {

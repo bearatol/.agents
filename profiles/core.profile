@@ -1,11 +1,14 @@
 rule:global-rules
 agent:ceo
 agent:security-reviewer
+agent:ai-vulnerability-monitor
 orchestration:protocols
 tool:team
 skill:ceo
 skill:skill-router
 skill:find-skills
 skill:skill-authoring
+skill:security-gate
+skill:context-engineering
 skill:natural-writing
 skill:quality-review

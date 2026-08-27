@@ -6,7 +6,7 @@ Agent Ecosystem separates portable expertise from host-specific execution.
 User goal
    |
    v
-CEO agent ---- catalog v2 ---- skills
+CEO agent ---- compact catalog metadata ---- selected skills
    |
    +---- task packet ---- specialist subagent
                               |
@@ -27,12 +27,17 @@ Integration and acceptance
 - `library/orchestration/` defines task, result, and state contracts.
 - `profiles/` groups components for selective installation.
 - Host adapters render small wrappers that point back to canonical prompts.
+- `catalog/migrations.json` records canonical replacements for merged roles.
 
 ## Why skills remain autonomous
 
 The CEO knows project dependencies but a specialist knows its own method. The
 CEO therefore recommends skills while each subagent makes the final selection.
 The result packet makes that choice observable without centralizing expertise.
+
+Progressive disclosure keeps the context small: agents scan IDs, descriptions,
+tags, and capabilities first; they read complete `SKILL.md` files only after
+selection, and task-relevant references only when required by that skill.
 
 Skills never change the task's scope or permissions. Subagents cannot spawn
 other subagents; additional expertise returns to the CEO for a new assignment.

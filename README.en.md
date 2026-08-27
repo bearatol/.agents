@@ -1,10 +1,12 @@
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt="Agent Ecosystem architecture banner" width="100%"></p>
+
 # Agent Ecosystem
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
 An original toolkit of skills, subagents, shared rules, and scripts managed
 through one global `~/.agents` directory. Select only the profiles you need and
-connect them to Codex, Claude Code, Gemini, or another AI agent.
+connect them to Codex, Claude Code, Gemini, Koda, Yandex SourceCraft, or another AI agent.
 
 The repository contains no model weights, secrets, virtual environments,
 caches, or republished skills with unclear licensing.
@@ -17,19 +19,28 @@ caches, or republished skills with unclear licensing.
 - a UI/UX process from user flow to design system;
 - video planning and implementation with React and Remotion;
 - context engineering for compact prompts and reliable handoffs;
-- CEO, marketer, design reviewer, video producer, and context engineer
-  subagents, plus engineer, QA reviewer, and product editor;
+- CEO plus engineering, QA, marketing, sales, SEO, design, video, context,
+  product, legal-content, and post-change security specialists;
 - a conflict-safe selective installer, diagnostics, and host adapters;
 - local MLX documentation and setup helpers without model weights.
 
 ## Install on a new computer
 
-You need Git, Bash, Python 3, and macOS or Linux.
+You need Git and Python 3. Use Bash on macOS/Linux/WSL or PowerShell on Windows.
 
 ```bash
 git clone https://github.com/bearatol/agent-ecosystem.git
 cd agent-ecosystem
 ./scripts/bootstrap.sh
+```
+
+Windows PowerShell:
+
+```powershell
+git clone https://github.com/bearatol/agent-ecosystem.git
+Set-Location agent-ecosystem
+.\scripts\bootstrap.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
+.\scripts\doctor.ps1
 ```
 
 The interactive bootstrap lists available profiles, asks what to install, and
@@ -121,26 +132,33 @@ to the CEO. See [Architecture](docs/ARCHITECTURE.md) and
 ./scripts/connect.sh --host codex
 ./scripts/connect.sh --host claude
 ./scripts/connect.sh --host gemini
+./scripts/connect.sh --host koda
+./scripts/connect.sh --host sourcecraft
 ```
 
 Adapters create skill links and host-native subagent wrappers. They do not
 overwrite a host's global instruction file. For another tool, point the agent
 to `~/.agents/AGENTS.md` and `~/.agents/CONNECT.md`. See
-[Host support](docs/HOSTS.md).
+[Host support](docs/HOSTS.md), including native Windows paths and WSL.
 
 ## Update
 
 ```bash
-./scripts/update.sh
+git fetch origin
+git log --oneline HEAD..'@{u}'
+./scripts/update.sh APPROVED_40_CHARACTER_COMMIT
 ```
 
-The installer never silently replaces a changed file. It reports a conflict.
-Use `--force` only when you intentionally want replacement, preferably after
-committing personal changes to Git.
+On native Windows, inspect the same fetched commit and run
+`./scripts/update.ps1 -ApprovedCommit APPROVED_40_CHARACTER_COMMIT`.
+The updater refuses to execute newly fetched installer code until the exact
+upstream commit is approved. The installer never replaces a user-modified or
+unmanaged file; it reports a conflict for manual resolution.
 
-During migration from an older installation, use `--preserve-agents-file` with
-`--force` to update managed components and the catalog without replacing your
-personal `~/.agents/AGENTS.md`.
+During migration from an older installation, use `--preserve-agents-file` to
+update managed components and the catalog without replacing your personal
+`~/.agents/AGENTS.md`. `--force` remains accepted for command compatibility but
+does not bypass conflict protection.
 
 ## Local models
 

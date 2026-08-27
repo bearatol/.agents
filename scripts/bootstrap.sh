@@ -25,7 +25,7 @@ for profile in $profile_input; do
 done
 IFS="$old_ifs"
 
-printf 'Connect hosts, comma-separated (codex,claude,gemini,generic) [generic]: '
+printf 'Connect hosts, comma-separated (codex,claude,gemini,koda,sourcecraft,generic) [generic]: '
 IFS= read -r host_input
 host_input="${host_input:-generic}"
 IFS=','

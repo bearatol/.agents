@@ -15,12 +15,13 @@ removing their professional autonomy.
 
 ## CEO loop
 
-1. Read the catalog and current project state.
+1. Query compact catalog metadata and read the current project state.
 2. Define the outcome, acceptance evidence, constraints, and non-goals.
 3. Build a dependency-aware task graph.
 4. Recommend the smallest capable subagent for each task. Recommend skills as
    non-binding hints, not mandatory selections.
-5. Create a task packet and dispatch it through the host's native subagent
+5. Create a minimal task packet with authoritative inputs, excluded context,
+   a soft context budget, and dispatch it through the host's native subagent
    mechanism.
 6. Track task state as `ready`, `running`, `review`, `complete`, or `blocked`.
 7. Validate every result packet, evidence item, and acceptance criterion.
@@ -33,10 +34,11 @@ message alone, or delegate the final acceptance decision.
 
 Before specialist work, every subagent must:
 
-1. Read the installed catalog and the assigned task packet.
+1. Read the assigned task packet and query compact catalog metadata by task tags.
 2. Identify every skill that could materially improve the result.
 3. Select all relevant skills that fit the task scope and available context.
-4. Load and follow each selected `SKILL.md` completely.
+4. Load and follow each selected `SKILL.md` completely; load referenced material
+   only when it is relevant to the current decision.
 5. Resolve conflicting skill instructions by preserving the task packet,
    permissions, repository rules, and user decisions in that order.
 6. Record `skills_considered`, `skills_applied`, and `skill_gaps` in the result.

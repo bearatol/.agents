@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.0 - 2026-08-27
+
+- Added native Windows PowerShell install, connect, update, doctor, and CI.
+- Added Koda and Yandex SourceCraft host support.
+- Merged design-master into design-reviewer and team-lead into CEO.
+- Added sales, SEO, legal-content, and post-change security specialists.
+- Expanded context engineering with metadata-first progressive disclosure.
+- Added an original scalable SVG repository banner.
+
 All notable changes to this project are documented here.
 
 ## 0.2.0 - 2026-08-26

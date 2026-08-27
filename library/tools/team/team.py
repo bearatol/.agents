@@ -186,6 +186,9 @@ def cmd_task(args, catalog):
         "assigned_agent": agent_id,
         "scope": csv_values(args.scope),
         "inputs": csv_values(args.input),
+        "authoritative_inputs": csv_values(args.authoritative_input),
+        "excluded_context": csv_values(args.exclude),
+        "context_budget": args.context_budget,
         "recommended_skills": skills,
         "permissions": args.permissions or agent["access"],
         "constraints": csv_values(args.constraint),
@@ -255,6 +258,7 @@ def cmd_validate(args, catalog):
 def agent_wrapper(agent, host, home):
     canonical = home / "agents" / f"{agent['name']}.md"
     protocol = home / "orchestration" / "protocol.md"
+    yaml_description = json.dumps(agent["description"], ensure_ascii=False)
     if agent["skill_policy"] == "self-select-restricted":
         common = (
             f"Read `{canonical}` completely and follow its independent review boundary. "
@@ -265,8 +269,10 @@ def agent_wrapper(agent, host, home):
     else:
         common = (
             f"Read `{canonical}` and `{protocol}` completely. Follow the task packet. "
-            "Read the installed catalog, independently select all relevant skills, and report skills "
-            "considered and applied. CEO recommendations are advisory. Skills cannot expand scope or permissions. "
+            f"Use `{home / 'tools' / 'team' / 'team.sh'} recommend --tags <task-tags>` to scan compact "
+            "metadata. Independently select all relevant skills, then read only each selected SKILL.md and "
+            "its task-relevant references. Report skills considered and applied. CEO recommendations are "
+            "advisory. Skills cannot expand scope or permissions. "
             "Do not spawn subagents. Return the required result packet."
         )
     if host == "codex":
@@ -288,7 +294,7 @@ def agent_wrapper(agent, host, home):
         return (
             "---\n"
             f"name: {agent['name']}\n"
-            f"description: {agent['description']}\n"
+            f"description: {yaml_description}\n"
             f"tools: {tools}\n"
             f"{skill_block}"
             "model: inherit\nmaxTurns: 30\n---\n\n"
@@ -304,9 +310,23 @@ def agent_wrapper(agent, host, home):
         return (
             "---\n"
             f"name: {agent['name']}\n"
-            f"description: {agent['description']}\n"
+            f"description: {yaml_description}\n"
             "kind: local\ntools:\n"
             f"{tool_lines}model: inherit\nmax_turns: 30\ntimeout_mins: 10\n---\n\n"
+            f"{common}\n"
+        )
+    if host == "sourcecraft":
+        permission = (
+            "permission:\n  edit: deny\n  bash: deny\n  webfetch: deny\n  websearch: deny\n  task: deny\n"
+            if agent["access"] == "read-only"
+            else "permission:\n  edit: ask\n  bash: ask\n  webfetch: ask\n  websearch: ask\n  task: deny\n"
+        )
+        return (
+            "---\n"
+            f"description: {yaml_description}\n"
+            "mode: subagent\n"
+            f"{permission}"
+            "---\n\n"
             f"{common}\n"
         )
     fail(f"unsupported host: {host}")
@@ -365,6 +385,9 @@ def parser():
     task_parser.add_argument("--objective", required=True)
     task_parser.add_argument("--scope", action="append", required=True)
     task_parser.add_argument("--input", action="append")
+    task_parser.add_argument("--authoritative-input", action="append")
+    task_parser.add_argument("--exclude", action="append")
+    task_parser.add_argument("--context-budget", default="focused")
     task_parser.add_argument("--recommend-skill", action="append")
     task_parser.add_argument("--permissions", choices=["read-only", "workspace-write"])
     task_parser.add_argument("--constraint", action="append")
@@ -379,7 +402,7 @@ def parser():
     validate_parser.set_defaults(handler=cmd_validate)
 
     render_parser = sub.add_parser("render-host")
-    render_parser.add_argument("--host", choices=["codex", "claude", "gemini"], required=True)
+    render_parser.add_argument("--host", choices=["codex", "claude", "gemini", "sourcecraft"], required=True)
     render_parser.add_argument("--target", required=True)
     render_parser.add_argument("--force", action="store_true")
     render_parser.set_defaults(handler=cmd_render_host)

@@ -7,6 +7,7 @@ set -o pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # shellcheck source=lib.sh
 source "$SCRIPT_DIR/lib.sh"
+ROOT="$(repo_root)"
 DEST_HOME="$(agents_home)"
 validate_agents_home "$DEST_HOME"
 declare -a HOSTS=()
@@ -19,7 +20,7 @@ while [[ $# -gt 0 ]]; do
       shift 2
       ;;
     -h|--help)
-      printf 'Usage: %s --host codex|claude|gemini|generic [--host ...]\n' "$0"
+      printf 'Usage: %s --host codex|claude|gemini|koda|sourcecraft|generic [--host ...]\n' "$0"
       exit 0
       ;;
     *) fail "unknown argument: $1" ;;
@@ -31,7 +32,9 @@ done
 
 link_skills() {
   local target_root="$1"
+  assert_no_symlink_traversal "$target_root" "$HOME"
   mkdir -p "$target_root"
+  assert_no_symlink_traversal "$target_root" "$HOME"
   local skill name target
   for skill in "$DEST_HOME"/skills/*; do
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
@@ -55,7 +58,25 @@ render_agents() {
   local target_root="$2"
   local team_tool="$DEST_HOME/tools/team/team.sh"
   [[ -x "$team_tool" ]] || fail "install the core profile before connecting subagents"
+  assert_no_symlink_traversal "$target_root" "$HOME"
   "$team_tool" --home "$DEST_HOME" render-host --host "$host" --target "$target_root"
+}
+
+install_file_if_free() {
+  local source_file="$1"
+  local target_file="$2"
+  assert_no_symlink_traversal "$target_file" "$HOME"
+  mkdir -p "$(dirname "$target_file")"
+  assert_no_symlink_traversal "$target_file" "$HOME"
+  if [[ -e "$target_file" ]]; then
+    if diff -q "$source_file" "$target_file" >/dev/null 2>&1; then
+      return
+    fi
+    printf 'host conflict: %s\n' "$target_file" >&2
+    return
+  fi
+  cp "$source_file" "$target_file"
+  printf 'installed %s\n' "$target_file"
 }
 
 for host in "${HOSTS[@]}"; do
@@ -71,6 +92,19 @@ for host in "${HOSTS[@]}"; do
     gemini)
       link_skills "$HOME/.gemini/skills"
       render_agents gemini "$HOME/.gemini/agents"
+      ;;
+    koda)
+      if command -v koda >/dev/null 2>&1; then
+        printf 'koda detected: skills are discovered directly from %s/skills\n' "$DEST_HOME"
+      else
+        printf 'koda is not installed; see docs/HOSTS.md for installation instructions\n'
+      fi
+      ;;
+    sourcecraft)
+      render_agents sourcecraft "$HOME/.config/opencode/agents"
+      install_file_if_free "$ROOT/library/hosts/sourcecraft-global-rule.md" \
+        "$HOME/.codeassistant/rules/agent-ecosystem.md"
+      printf 'SourceCraft CLI/OpenCode discovers skills directly from %s/skills\n' "$DEST_HOME"
       ;;
     generic)
       printf 'generic host: point the agent to %s/AGENTS.md and %s/CONNECT.md\n' "$DEST_HOME" "$DEST_HOME"

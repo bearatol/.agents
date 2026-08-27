@@ -2,26 +2,30 @@
 
 This file is the entry point for humans and AI agents.
 
-The installer and host adapters require Git, Bash, and Python 3 on macOS or
-Linux.
+The installer and host adapters require Git and Python 3. Use Bash on
+macOS/Linux/WSL and PowerShell on native Windows.
 
 ## Instructions for an AI agent
 
-1. Read `catalog/catalog.json` and the requested profile files.
+1. Query `catalog/catalog.json` metadata and the requested profile files; do not
+   preload every full skill.
 2. Ask what kind of work the user does and which hosts they use.
 3. Recommend the smallest sufficient set of profiles and components.
-4. Show the exact install command before running it.
+4. Choose Bash or PowerShell for the current operating system and show the exact
+   install command before running it.
 5. Run `scripts/install.sh` only with the user's selected profiles.
 6. Run `scripts/connect.sh` for explicitly selected hosts.
 7. Run `scripts/doctor.sh` and report conflicts or missing dependencies.
 8. Never install model weights, packages, or network services implicitly.
-9. Never overwrite an existing file unless the user approves `--force`.
+9. Never overwrite an unmanaged or user-modified file. Report the conflict and
+   require the user to resolve that exact path manually.
 10. After changing the ecosystem, update the catalog, profile membership,
     documentation, and tests in the same change.
 
 ## Instructions for a CEO agent
 
-1. Read `~/.agents/orchestration/protocol.md` and `~/.agents/catalog.json`.
+1. Read `~/.agents/orchestration/protocol.md` and query catalog metadata through
+   `~/.agents/tools/team/team.sh`.
 2. Apply the skills needed for coordination, planning, and verification.
 3. Build a dependency-aware task graph and recommend specialist agents.
 4. Create task packets with `~/.agents/tools/team/team.sh task`.
@@ -41,6 +45,13 @@ Linux.
 ~/.agents/tools/team/team.sh recommend --tags software,quality
 ```
 
+Native Windows:
+
+```powershell
+.\scripts\install.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft
+.\scripts\doctor.ps1
+```
+
 The default destination is `${AGENTS_HOME:-$HOME/.agents}`. Override it for a
 test or isolated installation:
 
@@ -53,6 +64,9 @@ AGENTS_HOME=/tmp/agent-ecosystem-test ./scripts/install.sh --profile core
 - `codex`: links installed skills into `~/.codex/skills`.
 - `claude`: links installed skills into `~/.claude/skills`.
 - `gemini`: links installed skills into `~/.gemini/skills`.
+- `koda`: uses Koda's native discovery of `~/.agents/skills`.
+- `sourcecraft`: uses native OpenCode skill discovery, renders OpenCode
+  subagents, and adds a conflict-safe SourceCraft Code Assistant rule.
 - `generic`: uses `~/.agents` directly; tell the host to read its `AGENTS.md`.
 
 Adapters create managed skill links and host-native subagent wrappers. They do

@@ -30,6 +30,11 @@ mkdir -p "$TEST_USER_HOME"
 [[ -f "$AGENTS_HOME/agents/engineer.md" ]]
 [[ -f "$AGENTS_HOME/agents/qa-reviewer.md" ]]
 [[ -f "$AGENTS_HOME/agents/product-editor.md" ]]
+[[ -f "$AGENTS_HOME/agents/ai-vulnerability-monitor.md" ]]
+[[ -f "$AGENTS_HOME/agents/legal-content-reviewer.md" ]]
+[[ -f "$AGENTS_HOME/agents/sales.md" ]]
+[[ -f "$AGENTS_HOME/agents/seo-researcher.md" ]]
+[[ -f "$AGENTS_HOME/skills/security-gate/SKILL.md" ]]
 [[ -f "$AGENTS_HOME/orchestration/protocol.md" ]]
 [[ -x "$AGENTS_HOME/tools/team/team.sh" ]]
 [[ -f "$AGENTS_HOME/.ecosystem-state.json" ]]
@@ -50,18 +55,30 @@ mkdir -p "$TEST_USER_HOME"
 "$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate result \
   "$AGENTS_HOME/orchestration/templates/result.json"
 
-HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini
+HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft --host koda
 [[ -f "$TEST_USER_HOME/.codex/agents/ceo.toml" ]]
 [[ -f "$TEST_USER_HOME/.claude/agents/engineer.md" ]]
 [[ -f "$TEST_USER_HOME/.gemini/agents/marketer.md" ]]
+[[ -f "$TEST_USER_HOME/.config/opencode/agents/seo-researcher.md" ]]
+[[ -f "$TEST_USER_HOME/.codeassistant/rules/agent-ecosystem.md" ]]
 grep -q 'skill-router' "$TEST_USER_HOME/.claude/agents/engineer.md"
-grep -q 'independently select all relevant skills' "$TEST_USER_HOME/.gemini/agents/marketer.md"
+grep -q 'Independently select all relevant skills' "$TEST_USER_HOME/.gemini/agents/marketer.md"
+grep -q 'scan compact' "$TEST_USER_HOME/.codex/agents/engineer.toml"
+grep -q '^description: "' "$TEST_USER_HOME/.config/opencode/agents/seo-researcher.md"
+if grep -q 'Read the installed catalog' "$TEST_USER_HOME/.claude/agents/engineer.md"; then
+  printf 'specialist wrapper unexpectedly preloads the full catalog\n' >&2
+  exit 1
+fi
 if grep -q 'skill-router' "$TEST_USER_HOME/.claude/agents/security-reviewer.md"; then
   printf 'security reviewer unexpectedly preloaded optional skills\n' >&2
   exit 1
 fi
 if grep -q 'activate_skill' "$TEST_USER_HOME/.gemini/agents/security-reviewer.md"; then
   printf 'security reviewer unexpectedly received skill activation\n' >&2
+  exit 1
+fi
+if rg -q '"name":"(design-master|team-lead)"' "$ROOT/catalog/catalog.json"; then
+  printf 'replaced agent remains in the canonical catalog\n' >&2
   exit 1
 fi
 
@@ -87,6 +104,11 @@ python3 "$ROOT/scripts/state.py" matches \
 printf 'local customization\n' >> "$AGENTS_HOME/skills/natural-writing/SKILL.md"
 if "$ROOT/scripts/install.sh" --profile core --no-root-files >/dev/null 2>&1; then
   printf 'modified managed skill was not reported as a conflict\n' >&2
+  exit 1
+fi
+grep -q '^local customization$' "$AGENTS_HOME/skills/natural-writing/SKILL.md"
+if "$ROOT/scripts/install.sh" --profile core --no-root-files --force >/dev/null 2>&1; then
+  printf 'force overwrote or accepted a user-modified managed skill\n' >&2
   exit 1
 fi
 grep -q '^local customization$' "$AGENTS_HOME/skills/natural-writing/SKILL.md"
