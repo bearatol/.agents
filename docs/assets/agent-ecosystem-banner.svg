@@ -1,98 +1,28 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1600" height="640" viewBox="0 0 1600 640" role="img" aria-labelledby="title desc">
   <title id="title">.agents</title>
-  <desc id="desc">A portable system connecting skills, agents, rules, and models to Codex, Claude, Gemini, Koda, and SourceCraft.</desc>
+  <desc id="desc">A portable ecosystem of skills, agents, rules, and models for AI tools.</desc>
   <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#070b14"/>
-      <stop offset="1" stop-color="#0d1424"/>
-    </linearGradient>
-    <radialGradient id="hub" cx="50%" cy="50%" r="50%">
-      <stop offset="0" stop-color="#61e7ff" stop-opacity=".13"/>
-      <stop offset="1" stop-color="#61e7ff" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
-      <path d="M32 0H0V32" fill="none" stroke="#a9b4c7" stroke-opacity=".055"/>
-      <circle cx="0" cy="0" r="1" fill="#a9b4c7" fill-opacity=".13"/>
-    </pattern>
-    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-      <feGaussianBlur stdDeviation="7" result="blur"/>
-      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
-    <linearGradient id="cyanLine" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#61e7ff"/><stop offset="1" stop-color="#61e7ff" stop-opacity=".45"/>
-    </linearGradient>
-    <linearGradient id="violetLine" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#8b7cff"/><stop offset="1" stop-color="#8b7cff" stop-opacity=".45"/>
-    </linearGradient>
-    <linearGradient id="greenLine" x1="0" y1="0" x2="1" y2="0">
-      <stop stop-color="#55e6a5"/><stop offset="1" stop-color="#55e6a5" stop-opacity=".45"/>
-    </linearGradient>
-    <style>
-      .title{font:800 74px Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:-2px;fill:#f5f7fb}
-      .subtitle{font:450 27px Inter,ui-sans-serif,system-ui,sans-serif;fill:#a9b4c7}
-      .node{font:700 18px Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:1px;fill:#f5f7fb;text-anchor:middle}
-      .host{font:650 21px Inter,ui-sans-serif,system-ui,sans-serif;fill:#f5f7fb}
-      .route{fill:none;stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
-    </style>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#090d19"/><stop offset="1" stop-color="#10182a"/></linearGradient>
+    <radialGradient id="aura" cx="50%" cy="50%" r="50%"><stop stop-color="#55dfff" stop-opacity=".2"/><stop offset="1" stop-color="#55dfff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="link" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#55dfff"/><stop offset="1" stop-color="#8a7dff"/></linearGradient>
+    <filter id="glow" x="-80%" y="-80%" width="260%" height="260%"><feGaussianBlur stdDeviation="8" result="blur"/><feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse"><path d="M40 0H0V40" fill="none" stroke="#cbd6ee" stroke-opacity=".05"/></pattern>
+    <style>.brand{font:800 86px Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:-3px;fill:#f7f9ff}.tagline{font:400 27px Inter,ui-sans-serif,system-ui,sans-serif;fill:#b8c4dc}.label{font:700 16px Inter,ui-sans-serif,system-ui,sans-serif;letter-spacing:1.6px;fill:#f7f9ff;text-anchor:middle}.host{font:600 15px Inter,ui-sans-serif,system-ui,sans-serif;fill:#b8c4dc}</style>
   </defs>
-
-  <rect width="1600" height="640" rx="22" fill="url(#bg)"/>
-  <rect width="1600" height="640" rx="22" fill="url(#grid)"/>
-  <ellipse cx="833" cy="320" rx="360" ry="285" fill="url(#hub)"/>
-  <path d="M40 90H330M40 550H410M1260 82H1560M1200 558H1560" stroke="#61e7ff" stroke-opacity=".09"/>
-
-  <text class="title" x="78" y="270">.agents</text>
-  <path d="M80 310H192" stroke="#ffca68" stroke-width="3" stroke-linecap="round"/>
-  <circle cx="80" cy="310" r="5" fill="#ffca68" filter="url(#glow)"/>
-  <text class="subtitle" x="78" y="366">One portable system. Any agent.</text>
-  <text class="subtitle" x="78" y="406">Only what you need.</text>
-
-  <g class="route">
-    <path d="M674 183L735 244" stroke="url(#cyanLine)"/>
-    <path d="M674 457L735 396" stroke="url(#violetLine)"/>
-    <path d="M894 320C920 320 920 464 946 464" stroke="url(#greenLine)"/>
-    <path d="M1054 425C1145 425 1145 96 1260 96" stroke="url(#cyanLine)"/>
-    <path d="M1054 442C1145 442 1145 240 1260 240" stroke="url(#violetLine)"/>
-    <path d="M1054 459C1145 459 1145 320 1260 320" stroke="#61b7ff" stroke-opacity=".78"/>
-    <path d="M1054 476C1145 476 1145 400 1260 400" stroke="url(#greenLine)"/>
-    <path d="M1054 493C1145 493 1145 544 1260 544" stroke="#ffca68" stroke-opacity=".78"/>
-  </g>
-
-  <g transform="translate(570 122)">
-    <rect width="108" height="108" rx="27" fill="#0b1f30" stroke="#61e7ff" stroke-width="2"/>
-    <rect x="8" y="8" width="92" height="92" rx="21" fill="none" stroke="#61e7ff" stroke-opacity=".35"/>
-    <circle cx="54" cy="39" r="8" fill="none" stroke="#61e7ff" stroke-width="3"/>
-    <path d="M54 47V57M38 68L54 57 70 68" fill="none" stroke="#61e7ff" stroke-width="3" stroke-linecap="round"/>
-    <text class="node" x="54" y="91">SKILLS</text>
-  </g>
-  <g transform="translate(570 410)">
-    <rect width="108" height="108" rx="27" fill="#141432" stroke="#8b7cff" stroke-width="2"/>
-    <rect x="8" y="8" width="92" height="92" rx="21" fill="none" stroke="#8b7cff" stroke-opacity=".35"/>
-    <circle cx="45" cy="38" r="9" fill="none" stroke="#8b7cff" stroke-width="3"/>
-    <circle cx="64" cy="42" r="7" fill="none" stroke="#8b7cff" stroke-width="3"/>
-    <path d="M29 66Q45 54 61 66M56 68Q68 59 79 70" fill="none" stroke="#8b7cff" stroke-width="3" stroke-linecap="round"/>
-    <text class="node" x="54" y="92">AGENTS</text>
-  </g>
-  <g transform="translate(786 266)">
-    <rect width="108" height="108" rx="27" fill="#102a27" stroke="#55e6a5" stroke-width="2"/>
-    <rect x="8" y="8" width="92" height="92" rx="21" fill="none" stroke="#55e6a5" stroke-opacity=".35"/>
-    <path d="M54 27L75 35V51Q75 69 54 77Q33 69 33 51V35Z" fill="none" stroke="#55e6a5" stroke-width="3"/>
-    <path d="M45 44H63M45 54H63" stroke="#55e6a5" stroke-width="3" stroke-linecap="round"/>
-    <text class="node" x="54" y="96">RULES</text>
-  </g>
-  <g transform="translate(946 410)">
-    <rect width="108" height="108" rx="27" fill="#101b35" stroke="#6e8cff" stroke-width="2"/>
-    <rect x="8" y="8" width="92" height="92" rx="21" fill="none" stroke="#6e8cff" stroke-opacity=".35"/>
-    <path d="M54 27L74 38V61L54 73 34 61V38Z" fill="none" stroke="#6e8cff" stroke-width="3"/>
-    <path d="M34 38L54 50 74 38M54 50V73" fill="none" stroke="#6e8cff" stroke-width="3"/>
-    <text class="node" x="54" y="96">MODELS</text>
-  </g>
-
-  <g>
-    <g transform="translate(1260 61)"><rect width="270" height="70" rx="19" fill="#0b1b2b" stroke="#61e7ff" stroke-width="2"/><circle cx="34" cy="35" r="6" fill="#61e7ff" filter="url(#glow)"/><text class="host" x="58" y="43">Codex</text></g>
-    <g transform="translate(1260 205)"><rect width="270" height="70" rx="19" fill="#15142b" stroke="#8b7cff" stroke-width="2"/><circle cx="34" cy="35" r="6" fill="#8b7cff" filter="url(#glow)"/><text class="host" x="58" y="43">Claude</text></g>
-    <g transform="translate(1260 285)"><rect width="270" height="70" rx="19" fill="#0d1d31" stroke="#61b7ff" stroke-width="2"/><circle cx="34" cy="35" r="6" fill="#61b7ff" filter="url(#glow)"/><text class="host" x="58" y="43">Gemini</text></g>
-    <g transform="translate(1260 365)"><rect width="270" height="70" rx="19" fill="#0d2723" stroke="#55e6a5" stroke-width="2"/><circle cx="34" cy="35" r="6" fill="#55e6a5" filter="url(#glow)"/><text class="host" x="58" y="43">Koda</text></g>
-    <g transform="translate(1260 509)"><rect width="270" height="70" rx="19" fill="#2a2110" stroke="#ffca68" stroke-width="2"/><circle cx="34" cy="35" r="6" fill="#ffca68" filter="url(#glow)"/><text class="host" x="58" y="43">SourceCraft</text></g>
-  </g>
+  <rect width="1600" height="640" rx="28" fill="url(#background)"/>
+  <rect width="1600" height="640" rx="28" fill="url(#grid)"/>
+  <ellipse cx="1080" cy="320" rx="330" ry="280" fill="url(#aura)"/>
+  <path d="M82 128H430M82 512H430" stroke="#55dfff" stroke-opacity=".13"/>
+  <text class="brand" x="100" y="272">.agents</text>
+  <path d="M102 310H236" stroke="#ffc45b" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="102" cy="310" r="5" fill="#ffc45b" filter="url(#glow)"/>
+  <text class="tagline" x="100" y="370">A portable ecosystem for AI work.</text>
+  <text class="tagline" x="100" y="410">Keep only what you need.</text>
+  <g fill="none" stroke="url(#link)" stroke-width="2.5" stroke-linecap="round"><path d="M1080 201V263"/><path d="M936 320H1023"/><path d="M1137 320H1224"/><path d="M1080 377V439"/></g>
+  <g transform="translate(1023 263)"><circle cx="57" cy="57" r="57" fill="#111f36" stroke="#55dfff" stroke-width="2"/><circle cx="57" cy="57" r="43" fill="none" stroke="#55dfff" stroke-opacity=".28"/><path d="M57 31L80 42V64L57 77 34 64V42Z" fill="none" stroke="#55dfff" stroke-width="3" stroke-linejoin="round"/><path d="M34 42L57 54 80 42M57 54V77" stroke="#55dfff" stroke-width="3" stroke-linejoin="round"/></g>
+  <g transform="translate(1008 105)"><rect width="144" height="96" rx="24" fill="#0d2030" stroke="#55dfff" stroke-width="2"/><circle cx="72" cy="35" r="10" fill="none" stroke="#55dfff" stroke-width="3"/><path d="M72 45V60M54 72L72 60 90 72" fill="none" stroke="#55dfff" stroke-width="3" stroke-linecap="round"/><text class="label" x="72" y="87">SKILLS</text></g>
+  <g transform="translate(792 272)"><rect width="144" height="96" rx="24" fill="#172039" stroke="#8a7dff" stroke-width="2"/><circle cx="60" cy="34" r="9" fill="none" stroke="#8a7dff" stroke-width="3"/><circle cx="80" cy="39" r="7" fill="none" stroke="#8a7dff" stroke-width="3"/><path d="M42 70Q60 56 78 70M72 72Q84 63 96 74" fill="none" stroke="#8a7dff" stroke-width="3" stroke-linecap="round"/><text class="label" x="72" y="87">AGENTS</text></g>
+  <g transform="translate(1224 272)"><rect width="144" height="96" rx="24" fill="#102b29" stroke="#50dfa7" stroke-width="2"/><path d="M72 25L95 34V51Q95 70 72 80Q49 70 49 51V34Z" fill="none" stroke="#50dfa7" stroke-width="3"/><path d="M61 45H83M61 56H83" stroke="#50dfa7" stroke-width="3" stroke-linecap="round"/><text class="label" x="72" y="87">RULES</text></g>
+  <g transform="translate(1008 439)"><rect width="144" height="96" rx="24" fill="#292112" stroke="#ffc45b" stroke-width="2"/><path d="M72 25L94 38V63L72 76 50 63V38Z" fill="none" stroke="#ffc45b" stroke-width="3" stroke-linejoin="round"/><path d="M50 38L72 51 94 38M72 51V76" stroke="#ffc45b" stroke-width="3" stroke-linejoin="round"/><text class="label" x="72" y="87">MODELS</text></g>
+  <g transform="translate(1298 486)"><rect width="218" height="42" rx="21" fill="#0c1424" stroke="#c6d2e8" stroke-opacity=".22"/><text class="host" x="24" y="27">Codex · Claude · Gemini · Koda</text></g>
 </svg>
