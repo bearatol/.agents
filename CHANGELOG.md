@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.1 - 2026-08-27
+
+- Fixed Windows CI exit propagation after expected negative security tests.
+
 ## 0.3.0 - 2026-08-27
 
 - Added native Windows PowerShell install, connect, update, doctor, and CI.
