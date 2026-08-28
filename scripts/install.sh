@@ -197,11 +197,13 @@ if [[ $ROOT_FILES -eq 1 ]]; then
 fi
 
 if [[ $DRY_RUN -eq 0 ]]; then
-  for component in "${COMPONENTS[@]}"; do
-    if grep -Fxq "$component" "$TEMP_INSTALLED"; then
-      printf '%s\n' "$component" >> "$TEMP_EXPLICIT"
-    fi
-  done
+  if [[ ${#COMPONENTS[@]} -gt 0 ]]; then
+    for component in "${COMPONENTS[@]}"; do
+      if grep -Fxq "$component" "$TEMP_INSTALLED"; then
+        printf '%s\n' "$component" >> "$TEMP_EXPLICIT"
+      fi
+    done
+  fi
 
   merge_selection_file() {
     local destination_file="$1"

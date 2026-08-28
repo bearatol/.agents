@@ -48,6 +48,12 @@ grep -qx 'core' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'software' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 [[ -f "$QUICK_START_USER_HOME/.codex/agents/engineer.toml" ]]
 
+BASH32_AGENTS_HOME="$TEST_HOME/bash32-profile-only-agents"
+BASH32_USER_HOME="$TEST_HOME/bash32-profile-only-user"
+HOME="$BASH32_USER_HOME" AGENTS_HOME="$BASH32_AGENTS_HOME" \
+  /bin/bash "$ROOT/scripts/install.sh" --profile software --no-root-files >/dev/null
+grep -qx 'software' "$BASH32_AGENTS_HOME/.ecosystem-profiles"
+
 INVALID_INPUT_AGENTS_HOME="$TEST_HOME/invalid-input-agents"
 INVALID_INPUT_USER_HOME="$TEST_HOME/invalid-input-user"
 for invalid_host in invalid-host ../codex 'codex;touch' --host; do
