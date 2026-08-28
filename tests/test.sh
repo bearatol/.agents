@@ -6,11 +6,22 @@ set -o pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEST_HOME="$(mktemp -d)"
-trap 'rm -rf "$TEST_HOME"' EXIT
+PORTABILITY_PID=""
+cleanup() {
+  if [[ -n "$PORTABILITY_PID" ]] && kill -0 "$PORTABILITY_PID" >/dev/null 2>&1; then
+    kill "$PORTABILITY_PID" >/dev/null 2>&1 || true
+    wait "$PORTABILITY_PID" >/dev/null 2>&1 || true
+  fi
+  rm -rf "$TEST_HOME"
+}
+trap cleanup EXIT
 
 export AGENTS_HOME="$TEST_HOME/.agents"
 TEST_USER_HOME="$TEST_HOME/user"
 mkdir -p "$TEST_USER_HOME"
+
+python3 "$ROOT/tests/test_portability.py" > "$TEST_HOME/portability.log" 2>&1 &
+PORTABILITY_PID=$!
 
 PREFLIGHT_AGENTS_HOME="$TEST_HOME/preflight-agents"
 PREFLIGHT_USER_HOME="$TEST_HOME/preflight-user"
@@ -179,5 +190,13 @@ printf 'personal rules\n' > "$AGENTS_HOME/AGENTS.md"
 "$ROOT/scripts/install.sh" --component skill:quality-review --force \
   --preserve-agents-file >/dev/null
 grep -q '^personal rules$' "$AGENTS_HOME/AGENTS.md"
+
+if ! wait "$PORTABILITY_PID"; then
+  PORTABILITY_PID=""
+  cat "$TEST_HOME/portability.log" >&2
+  exit 1
+fi
+PORTABILITY_PID=""
+cat "$TEST_HOME/portability.log"
 
 printf 'All tests passed.\n'

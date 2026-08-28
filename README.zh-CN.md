@@ -1,108 +1,137 @@
-<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents 架构横幅" width="100%"></p>
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents 架构" width="100%"></p>
 
 # .agents
 
+<p align="center">
+  <a href="https://github.com/bearatol/.agents/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/bearatol/.agents/actions/workflows/test.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+</p>
+
+<p align="center"><strong>只需配置一次 AI agent 工作空间，即可通过五个清晰的命令检查、迁移和恢复。</strong></p>
+
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-这是一个可移植的 AI 代理工作层：把共享规则、必要技能和专业代理放在合适的位置，不用为每个任务从头拼装上下文。
-
-先选择一个工作包。Foundation 会随它安装，并连接到你选定的 AI 工具。
+`.agents` 管理共享规则、skills、专业 agents、工作配置和 Codex、Claude Code、Gemini CLI、Koda、SourceCraft 的连接。它不会静默覆盖已有的用户文件。
 
 ## 快速开始
 
-需要 Git 和 Python 3。在 macOS、Linux 或 WSL 上运行：
+需要 Git 和 Python 3。macOS、Linux 或 WSL：
 
 ```bash
 git clone https://github.com/bearatol/.agents.git
 cd .agents
-./scripts/bootstrap.sh
+./scripts/agents.sh setup
 ```
 
-安装器只需要两个选择：工作包和主机。它会加入 Foundation（技术配置名为 `core`），安装工作包并提供连接。然后验证安装：
-
-```bash
-./scripts/doctor.sh
-```
-
-在 Windows 上使用 PowerShell：
+Windows：
 
 ```powershell
 git clone https://github.com/bearatol/.agents.git
 Set-Location .agents
-.\scripts\install.ps1 -Profile core,software -HostName codex
-.\scripts\doctor.ps1
+.\scripts\agents.ps1 setup
 ```
 
-## 选择工作包
+Setup 只询问工作类型和使用的 AI host，并在写入前显示计划。
 
-Foundation 是共享基础：规则、CEO、路由、技能发现、上下文工程、自然写作和质量评审。为了保持命令兼容，`core` 仍然是它的技术名称。
+## 组合多个工作配置或全部安装
 
-| 你的目标 | 选择 |
+重复使用 `--profile` 即可组合多个配置；加入 `core` 可获得共享规则和专业 agents。例如，同时进行软件开发和视频工作：
+
+```bash
+./scripts/agents.sh setup --profile core --profile software --profile video --host codex
+```
+
+Windows：
+
+```powershell
+.\scripts\agents.ps1 setup --profile core --profile software --profile video --host codex
+```
+
+如需安装所有 profiles，请使用 `all`；它已包含 `core`：
+
+```bash
+./scripts/agents.sh setup --profile all --host codex
+```
+
+## 五个主要命令
+
+| 目标 | macOS / Linux / WSL | Windows |
+| --- | --- | --- |
+| 安装或扩展工作空间 | `./scripts/agents.sh setup` | `.\scripts\agents.ps1 setup` |
+| 查看当前状态 | `./scripts/agents.sh status` | `.\scripts\agents.ps1 status` |
+| 导出可迁移配置 | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
+| 在新电脑恢复 | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
+| 运行完整检查 | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+
+原有的 install、connect、update 和 list 脚本仍可用于自动化和高级控制。
+
+## 第一个任务
+
+Setup 完成后，打开或重启所选 AI 工具，然后直接提出任务：
+
+> 检查这个项目中的错误。先给出简短计划，只进行已确认的修改，并展示测试结果。
+
+大型任务可以使用 CEO：
+
+> 使用 CEO 进行完整的产品审计。只在确有价值时调用专业 agents，并为每个结论提供证据。
+
+## 迁移到新电脑
+
+旧电脑：
+
+请从可信且没有未提交更改的 checkout 导出，确保其内容与 lock 中记录的 commit 完全一致。
+
+```bash
+./scripts/agents.sh status
+./scripts/agents.sh export ./agents.lock.json
+```
+
+复制 `agents.lock.json`，在新电脑克隆仓库，并单独检查 lock 中记录的完整 commit SHA。将没有本地更改的干净 checkout 切换到已经确认的 commit 后执行：
+
+```bash
+./scripts/agents.sh restore ./agents.lock.json
+./scripts/agents.sh doctor
+```
+
+Restore 不会自动执行 fetch、checkout、降级、删除或强制覆盖。它先验证 lock 并预检所有目标。详见 [可迁移性与恢复](docs/PORTABILITY.md)。
+
+| 会迁移 | 不会迁移 |
 | --- | --- |
-| 开发和审查软件 | `software` |
-| 市场研究、营销和发布 | `marketing` |
-| 编写文档、文章和产品文案 | `content` |
-| 设计界面 | `design` |
-| 规划和制作视频 | `video` |
-| 处理大型任务和上下文交接 | `context` |
-| 配置不含模型权重的本地 MLX helper | `local-models` |
+| 选定 profiles 和单独 components | 账号和身份验证 |
+| 支持的 host 连接 | API keys 和其他 secrets |
+| 精确 commit 和生态版本 | AI 应用和 CLI 软件包 |
+| 受管理的 rules、skills 和 agents | 模型权重、plugins 和无关 dotfiles |
 
-安装前可查看准确内容：
+这不是整台电脑的备份，而是 `.agents` 受管理工作空间的恢复。
 
-```bash
-./scripts/list.sh --profile software
-```
+## 状态说明
 
-## 连接和验证
+- `current`：安装内容与来源一致；
+- `missing`：受管理目标缺失；
+- `managed-stale`：来源已更新，安装副本仍是旧版本；
+- `locally-modified`：安装内容被本地修改；
+- `host-conflicting`：host 连接缺失或被非管理内容占用。
 
-支持 Codex、Claude Code、Gemini、Koda、Yandex SourceCraft 和通用模式。快速开始会连接所选主机；之后可增加其他主机：
+`status` 检查安装状态。`doctor` 还会验证 catalog、profiles、仓库文本、禁止的文件和 host 集成；不安全或不完整的状态会返回非零退出码。
 
-```bash
-./scripts/connect.sh --host claude
-./scripts/doctor.sh
-```
+## 工作配置
 
-适配器会为已安装技能创建受管理的链接，不会替换现有用户指令。Windows、WSL 和其他细节请查看[主机支持](docs/HOSTS.md)。
+| 工作 | Profile |
+| --- | --- |
+| 软件开发与审查 | `software` |
+| 市场研究、营销与发布 | `marketing` |
+| 文档和产品内容 | `content` |
+| 界面设计 | `design` |
+| 视频规划与制作 | `video` |
+| 长任务与上下文交接 | `context` |
+| 不含模型权重的本地 MLX helper | `local-models` |
 
-## 让上下文保持聚焦
+交互式 setup 会自动包含 Foundation (`core`)。显式选择 profiles 时，请自行加入 `--profile core`，或使用 `--profile all`。可运行 `./scripts/list.sh --profile software` 查看准确内容。
 
-Foundation 将精简的共享规则保存在一个地方。工作包只添加领域相关指令；CEO 可以把复杂目标拆成可验证的专业任务。每个结果都应说明完成内容、验证、所用技能和剩余风险。
+## 信任边界
 
-这是一种工作方式，不承诺固定的 token 节省或通用质量；结果仍取决于任务、模型和审查。
+Lock 仅包含 schema version、ecosystem version、完整 commit SHA、profiles、components 和 hosts；不包含路径、命令、URL、环境变量、credentials 或文件内容。本地修改和非管理文件会被保留，冲突需要用户明确处理。
 
-## 需要更多控制时
+更多信息：[hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [orchestration](docs/ORCHESTRATION.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md)。
 
-<details>
-<summary>非交互式安装和单个组件</summary>
-
-```bash
-./scripts/install.sh --profile core --profile marketing --host codex
-./scripts/install.sh --component skill:copywriting
-```
-
-运行 `./scripts/list.sh` 查看所有维护中的配置。`all` 适合确实需要整个集合的情况。
-</details>
-
-<details>
-<summary>CEO 与子代理</summary>
-
-CEO 会拆分目标并推荐专家；每位专家都在任务和权限范围内选择技能。安全审查代理与可选技能隔离。详见[架构](docs/ARCHITECTURE.md)和[编排](docs/ORCHESTRATION.md)。
-
-```bash
-~/.agents/tools/team/team.sh recommend --tags software,quality
-```
-</details>
-
-<details>
-<summary>更新、本地模型和贡献</summary>
-
-更新前先审查准确的 upstream 提交，再运行：
-
-```bash
-./scripts/update.sh APPROVED_40_CHARACTER_COMMIT
-```
-
-`local-models` 只安装文档和仅限 loopback 的 helpers，不安装模型权重或虚拟环境。更新、安全、许可证和贡献规则请查看 [CONNECT.md](CONNECT.md)、[SECURITY.md](SECURITY.md)、[THIRD_PARTY.md](THIRD_PARTY.md) 和 [CONTRIBUTING.md](CONTRIBUTING.md)。
-</details>
-
-仓库组件为本项目原创，并使用 [MIT](LICENSE) 许可证发布。
+本项目采用 [MIT License](LICENSE)。

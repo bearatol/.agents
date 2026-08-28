@@ -186,6 +186,26 @@ function Write-AeState([hashtable] $State, [string] $StatePath) {
     }
 }
 
+function Write-AeManagedLines {
+    param(
+        [Parameter(Mandatory = $true)][string] $Path,
+        [Parameter(Mandatory = $true)][AllowEmptyCollection()][string[]] $Values,
+        [Parameter(Mandatory = $true)][string] $SafetyRoot
+    )
+    Assert-AeSafeDestination -Path $Path -SafetyRoot $SafetyRoot
+    $parent = Split-Path -Parent $Path
+    New-Item -ItemType Directory -Force -Path $parent | Out-Null
+    Assert-AeSafeDestination -Path $Path -SafetyRoot $SafetyRoot
+    $temporary = Join-Path $parent ('.ecosystem-selection-{0}.tmp' -f [Guid]::NewGuid().ToString('N'))
+    try {
+        [IO.File]::WriteAllLines($temporary, $Values, [Text.UTF8Encoding]::new($false))
+        Assert-AeSafeDestination -Path $Path -SafetyRoot $SafetyRoot
+        Move-Item -LiteralPath $temporary -Destination $Path -Force
+    } finally {
+        if (Test-Path -LiteralPath $temporary) { Remove-Item -LiteralPath $temporary -Force }
+    }
+}
+
 function Copy-AeManagedPath {
     param(
         [Parameter(Mandatory = $true)][string] $Source,
@@ -300,11 +320,27 @@ function Install-AeComponents {
         Write-AeState $state $statePath
         $manifest = Join-Path $homePath '.ecosystem-installed'
         $old = if (Test-Path -LiteralPath $manifest) { @(Get-Content -LiteralPath $manifest) } else { @() }
-        @($old + $installed | Where-Object { $_ } | Sort-Object -Unique) | Set-Content -LiteralPath $manifest -Encoding UTF8
+        Write-AeManagedLines -Path $manifest `
+            -Values @($old + $installed | Where-Object { $_ } | Sort-Object -Unique) -SafetyRoot $homePath
+        $componentManifest = Join-Path $homePath '.ecosystem-components'
+        $oldComponents = if (Test-Path -LiteralPath $componentManifest) { @(Get-Content -LiteralPath $componentManifest) } else { @() }
+        $completedComponents = @($Components | Where-Object { $installed -contains $_ })
+        Write-AeManagedLines -Path $componentManifest `
+            -Values @($oldComponents + $completedComponents | Where-Object { $_ } | Sort-Object -Unique) `
+            -SafetyRoot $homePath
+        if ($conflicts -gt 0) {
+            Write-Host "Finished: $installedCount installed, $conflicts conflicts."
+            throw "$conflicts conflict(s) require review."
+        }
         $profileManifest = Join-Path $homePath '.ecosystem-profiles'
         $oldProfiles = if (Test-Path -LiteralPath $profileManifest) { @(Get-Content -LiteralPath $profileManifest) } else { @() }
-        @($oldProfiles + $Profiles | Where-Object { $_ } | Sort-Object -Unique) | Set-Content -LiteralPath $profileManifest -Encoding UTF8
-        if ($Hosts.Count -gt 0) { Connect-AeHosts -Hosts $Hosts -Force:$Force }
+        Write-AeManagedLines -Path $profileManifest `
+            -Values @($oldProfiles + $Profiles | Where-Object { $_ } | Sort-Object -Unique) `
+            -SafetyRoot $homePath
+        if ($Hosts.Count -gt 0) {
+            Connect-AeHosts -Hosts $Hosts -Force:$Force -DryRun
+            Connect-AeHosts -Hosts $Hosts -Force:$Force
+        }
     }
     Write-Host "Finished: $installedCount installed, $conflicts conflicts."
     if ($conflicts -gt 0) { throw "$conflicts conflict(s) require review." }
@@ -323,7 +359,7 @@ function Get-AeHostPaths([string] $HostName) {
 }
 
 function Connect-AeHosts {
-    param([Parameter(Mandatory = $true)][string[]] $Hosts, [switch] $Force)
+    param([Parameter(Mandatory = $true)][string[]] $Hosts, [switch] $Force, [switch] $DryRun)
     $homePath = Get-AeAgentsHome
     $skills = Join-Path $homePath 'skills'
     if (-not (Test-Path -LiteralPath $skills -PathType Container)) { throw 'Install a profile before connecting hosts.' }
@@ -344,7 +380,7 @@ function Connect-AeHosts {
             foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
                 if (-not (Test-Path -LiteralPath (Join-Path $skill.FullName 'SKILL.md') -PathType Leaf)) { continue }
                 $destination = Join-Path $paths.Skills $skill.Name
-                $result = Copy-AeManagedPath -Source $skill.FullName -Destination $destination -StateId "host:$hostName:skill:$($skill.Name)" -State $state -SafetyRoot $paths.Skills -Force:$Force
+                $result = Copy-AeManagedPath -Source $skill.FullName -Destination $destination -StateId "host:$hostName:skill:$($skill.Name)" -State $state -SafetyRoot $paths.Skills -Force:$Force -DryRun:$DryRun
                 if ($result.Conflict) { $conflicts++ }
             }
         }
@@ -362,7 +398,7 @@ function Connect-AeHosts {
                 $stateName = [IO.Path]::GetFileNameWithoutExtension($wrapper.Name)
                 $result = Copy-AeManagedPath -Source $wrapper.FullName -Destination $destination `
                     -StateId "host:$hostName:agent:$stateName" -State $state `
-                    -SafetyRoot $paths.Agents -Force:$Force
+                    -SafetyRoot $paths.Agents -Force:$Force -DryRun:$DryRun
                 if ($result.Conflict) { $conflicts++ }
             }
         } finally {
@@ -374,11 +410,18 @@ function Connect-AeHosts {
             $ruleRoot = Join-Path (Get-AeUserHome) '.codeassistant/rules'
             $ruleSource = Join-Path (Get-AeRepoRoot) 'library/hosts/sourcecraft-global-rule.md'
             $ruleDestination = Join-Path $ruleRoot 'agent-ecosystem.md'
-            $result = Copy-AeManagedPath -Source $ruleSource -Destination $ruleDestination -StateId 'host:sourcecraft:rule:agent-ecosystem' -State $state -SafetyRoot $ruleRoot -Force:$Force
+            $result = Copy-AeManagedPath -Source $ruleSource -Destination $ruleDestination -StateId 'host:sourcecraft:rule:agent-ecosystem' -State $state -SafetyRoot $ruleRoot -Force:$Force -DryRun:$DryRun
             if ($result.Conflict) { $conflicts++ }
         }
     }
-    Write-AeState $state $statePath
+    if (-not $DryRun -and $conflicts -eq 0) {
+        Write-AeState $state $statePath
+        $hostManifest = Join-Path $homePath '.ecosystem-hosts'
+        $oldHosts = if (Test-Path -LiteralPath $hostManifest) { @(Get-Content -LiteralPath $hostManifest) } else { @() }
+        Write-AeManagedLines -Path $hostManifest `
+            -Values @($oldHosts + $Hosts | Where-Object { $_ } | Sort-Object -Unique) `
+            -SafetyRoot $homePath
+    }
     if ($conflicts -gt 0) { throw "$conflicts host adapter conflict(s) require review." }
 }
 
@@ -424,8 +467,16 @@ function Invoke-AeDoctor {
         Write-Warning "no installation manifest at $manifest"
         $warnings++
     }
+    if ($python -and (Test-Path -LiteralPath $manifest -PathType Leaf)) {
+        & $python (Join-Path $root 'scripts/environment.py') status `
+            --repo $root --home $homePath --user-home (Get-AeUserHome)
+        if ($LASTEXITCODE -ne 0) {
+            Write-Error 'installed environment has missing, stale, modified, or host-conflicting targets' -ErrorAction Continue
+            $errors++
+        }
+    }
     Write-Host "Doctor finished: $errors errors, $warnings warnings."
-    if ($errors -gt 0) { throw 'Doctor found errors.' }
+    if ($errors -gt 0 -or $warnings -gt 0) { throw 'Doctor found errors or warnings.' }
 }
 
-Export-ModuleMember -Function Get-AeRepoRoot, Get-AeAgentsHome, Install-AeComponents, Connect-AeHosts, Invoke-AeDoctor
+Export-ModuleMember -Function Get-AeRepoRoot, Get-AeUserHome, Get-AeAgentsHome, Install-AeComponents, Connect-AeHosts, Invoke-AeDoctor

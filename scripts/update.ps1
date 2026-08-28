@@ -24,7 +24,14 @@ if ($LASTEXITCODE -or $ResolvedApproval -ne $RemoteCommit) {
 git -C $RepoRoot merge --ff-only $ResolvedApproval
 if ($LASTEXITCODE) { throw 'Fast-forward update failed' }
 $Profiles = @(Get-Content -LiteralPath $Manifest | Where-Object { $_.Trim() })
-& (Join-Path $PSScriptRoot 'install.ps1') -Profile $Profiles -Force:$Force
+$ComponentManifest = Join-Path $AgentsHome '.ecosystem-components'
+$Components = if (Test-Path -LiteralPath $ComponentManifest) { @(Get-Content -LiteralPath $ComponentManifest | Where-Object { $_.Trim() }) } else { @() }
+$HostManifest = Join-Path $AgentsHome '.ecosystem-hosts'
+$Hosts = if (Test-Path -LiteralPath $HostManifest) { @(Get-Content -LiteralPath $HostManifest | Where-Object { $_.Trim() }) } else { @() }
+Install-AeComponents -Profiles $Profiles -Components $Components -Hosts @() -Force:$Force -DryRun
+if ($Hosts.Count -gt 0) { Connect-AeHosts -Hosts $Hosts -Force:$Force -DryRun }
+Install-AeComponents -Profiles $Profiles -Components $Components -Hosts @() -Force:$Force
+if ($Hosts.Count -gt 0) { Connect-AeHosts -Hosts $Hosts -Force:$Force }
 if (-not $?) { exit 1 }
 & (Join-Path $PSScriptRoot 'doctor.ps1')
 if (-not $?) { exit 1 }

@@ -75,7 +75,8 @@ state_record() {
 TEMP_COMPONENTS="$(mktemp)"
 TEMP_INSTALLED="$(mktemp)"
 TEMP_MERGED="$(mktemp)"
-trap 'rm -f "$TEMP_COMPONENTS" "$TEMP_INSTALLED" "$TEMP_MERGED"' EXIT
+TEMP_EXPLICIT="$(mktemp)"
+trap 'rm -f "$TEMP_COMPONENTS" "$TEMP_INSTALLED" "$TEMP_MERGED" "$TEMP_EXPLICIT"' EXIT
 if [[ ${#PROFILES[@]} -gt 0 ]]; then
   for profile in "${PROFILES[@]}"; do
     expand_profile "$ROOT" "$profile" >> "$TEMP_COMPONENTS"
@@ -153,12 +154,24 @@ for component in "${UNIQUE_COMPONENTS[@]}"; do
   INSTALLED=$((INSTALLED + 1))
 done
 
-if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
+if [[ $ROOT_FILES -eq 1 ]]; then
   install_root_file() {
     local source_file="$1"
     local destination_file="$2"
     local state_id="root:$(basename "$destination_file")"
     assert_no_symlink_traversal "$destination_file" "$DEST_HOME"
+    if [[ $DRY_RUN -eq 1 ]]; then
+      if [[ -e "$destination_file" ]]; then
+        if diff -q "$source_file" "$destination_file" >/dev/null 2>&1 || state_matches "$state_id" "$destination_file"; then
+          return
+        fi
+        printf 'conflict   managed file (%s)\n' "$destination_file" >&2
+        CONFLICTS=$((CONFLICTS + 1))
+      else
+        printf 'would-install  %s -> %s\n' "$state_id" "$destination_file"
+      fi
+      return
+    fi
     if [[ -e "$destination_file" ]] && ! diff -q "$source_file" "$destination_file" >/dev/null 2>&1; then
       if state_matches "$state_id" "$destination_file"; then
         printf 'updating   managed file (%s)\n' "$destination_file"
@@ -184,23 +197,48 @@ if [[ $DRY_RUN -eq 0 && $ROOT_FILES -eq 1 ]]; then
 fi
 
 if [[ $DRY_RUN -eq 0 ]]; then
+  for component in "${COMPONENTS[@]}"; do
+    if grep -Fxq "$component" "$TEMP_INSTALLED"; then
+      printf '%s\n' "$component" >> "$TEMP_EXPLICIT"
+    fi
+  done
+
+  merge_selection_file() {
+    local destination_file="$1"
+    local additions_file="$2"
+    assert_no_symlink_traversal "$destination_file" "$DEST_HOME"
+    : > "$TEMP_MERGED"
+    if [[ -f "$destination_file" ]]; then
+      cat "$destination_file" > "$TEMP_MERGED"
+    fi
+    cat "$additions_file" >> "$TEMP_MERGED"
+    local staged_file
+    staged_file="$(mktemp "$DEST_HOME/.ecosystem-selection.XXXXXX")"
+    awk 'NF && !seen[$0]++' "$TEMP_MERGED" > "$staged_file"
+    assert_no_symlink_traversal "$destination_file" "$DEST_HOME"
+    mv "$staged_file" "$destination_file"
+  }
+
   if [[ -f "$DEST_HOME/.ecosystem-installed" ]]; then
     cat "$DEST_HOME/.ecosystem-installed" > "$TEMP_MERGED"
   fi
   cat "$TEMP_INSTALLED" >> "$TEMP_MERGED"
-  awk 'NF && !seen[$0]++' "$TEMP_MERGED" > "$DEST_HOME/.ecosystem-installed"
+  staged_installed="$(mktemp "$DEST_HOME/.ecosystem-installed.XXXXXX")"
+  awk 'NF && !seen[$0]++' "$TEMP_MERGED" > "$staged_installed"
+  assert_no_symlink_traversal "$DEST_HOME/.ecosystem-installed" "$DEST_HOME"
+  mv "$staged_installed" "$DEST_HOME/.ecosystem-installed"
 
-  : > "$TEMP_MERGED"
-  if [[ -f "$DEST_HOME/.ecosystem-profiles" ]]; then
-    cat "$DEST_HOME/.ecosystem-profiles" > "$TEMP_MERGED"
+  if [[ $CONFLICTS -eq 0 ]]; then
+    : > "$TEMP_COMPONENTS"
+    if [[ ${#PROFILES[@]} -gt 0 ]]; then
+      printf '%s\n' "${PROFILES[@]}" > "$TEMP_COMPONENTS"
+    fi
+    merge_selection_file "$DEST_HOME/.ecosystem-profiles" "$TEMP_COMPONENTS"
   fi
-  if [[ ${#PROFILES[@]} -gt 0 ]]; then
-    printf '%s\n' "${PROFILES[@]}" >> "$TEMP_MERGED"
-  fi
-  awk 'NF && !seen[$0]++' "$TEMP_MERGED" > "$DEST_HOME/.ecosystem-profiles"
+  merge_selection_file "$DEST_HOME/.ecosystem-components" "$TEMP_EXPLICIT"
 fi
 
-if [[ ${#HOSTS[@]} -gt 0 && $DRY_RUN -eq 0 ]]; then
+if [[ ${#HOSTS[@]} -gt 0 && $DRY_RUN -eq 0 && $CONFLICTS -eq 0 ]]; then
   host_args=()
   for host in "${HOSTS[@]}"; do
     host_args+=(--host "$host")

@@ -26,6 +26,11 @@ Integration and acceptance
 - `library/skills/` contains reusable methods loaded by CEO and subagents.
 - `library/orchestration/` defines task, result, and state contracts.
 - `profiles/` groups components for selective installation.
+- `.ecosystem-profiles`, `.ecosystem-components`, and `.ecosystem-hosts` record
+  the logical selection on one machine; they never contain credentials.
+- A user-exported environment lock is the portable, versioned description of
+  that selection: schema version, ecosystem version, full commit SHA, profiles,
+  explicit components, and hosts.
 - Host adapters render small wrappers that point back to canonical prompts.
 - `catalog/migrations.json` records canonical replacements for merged roles.
 
@@ -50,3 +55,10 @@ The catalog and prompts express policy but cannot grant host permissions. The
 host sandbox, tool allowlist, user approvals, and project rules remain the
 enforcement layer. Generated wrappers use the access level declared for each
 agent and preserve conflicting user configuration.
+
+Environment locks are untrusted declarative input. They cannot specify paths,
+repositories, URLs, commands, environment variables, overwrite behavior, or
+network destinations. Restore validates logical IDs and provenance, preflights
+managed and host targets, and derives all destinations from trusted code. Git
+fetch, checkout, downgrade, credentials, host applications, plugins, and model
+weights remain outside the restore boundary.

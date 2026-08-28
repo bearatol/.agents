@@ -9,6 +9,7 @@ param(
 $ErrorActionPreference = 'Stop'
 Import-Module (Join-Path $PSScriptRoot 'AgentEcosystem.psm1') -Force
 try {
+    Connect-AeHosts -Hosts $HostName -Force:$Force -DryRun
     Connect-AeHosts -Hosts $HostName -Force:$Force
 } catch {
     Write-Error $_

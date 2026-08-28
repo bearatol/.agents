@@ -27,8 +27,11 @@ local-llm/
 
 # Local installation state retained alongside this source checkout.
 /.ecosystem-installed
+/.ecosystem-components
+/.ecosystem-hosts
 /.ecosystem-profiles
 /.ecosystem-state.json
+/.ecosystem-state-windows.json
 /.skill-lock.json
 /CATALOG.md
 /agents/

@@ -1,5 +1,12 @@
 # Host Support
 
+For normal use, select a host through `scripts/agents.sh setup` or
+`scripts/agents.ps1 setup`. The selection is recorded for export, restore, and
+future updates. Run `status` for a compact integration view and `doctor` for the
+complete repository, installation, and host check. A conflicting unmanaged
+skill or agent makes connection fail before host writes; the existing file is
+left unchanged.
+
 ## Codex
 
 The adapter links skills into `~/.codex/skills` and renders agent wrappers into

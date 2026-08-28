@@ -1,108 +1,137 @@
-<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents architecture banner" width="100%"></p>
+<p align="center"><img src="docs/assets/agent-ecosystem-banner.svg" alt=".agents architecture" width="100%"></p>
 
 # .agents
 
+<p align="center">
+  <a href="https://github.com/bearatol/.agents/actions/workflows/test.yml"><img alt="Tests" src="https://github.com/bearatol/.agents/actions/workflows/test.yml/badge.svg"></a>
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
+</p>
+
+<p align="center"><strong>Configure your AI-agent workspace once, then check, move, and restore it through five clear commands.</strong></p>
+
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-One portable layer for AI-agent work. It keeps shared rules, useful skills, and specialists available where they help, without rebuilding the context from scratch for every task.
-
-Start with one work pack. Foundation is installed with it and connects it to the AI tool you choose.
+`.agents` keeps shared rules, skills, specialists, work profiles, and connections for Codex, Claude Code, Gemini CLI, Koda, and SourceCraft. Existing user files are never silently overwritten.
 
 ## Quick start
 
-You need Git and Python 3. On macOS, Linux, or WSL:
+Git and Python 3 are required. On macOS, Linux, or WSL:
 
 ```bash
 git clone https://github.com/bearatol/.agents.git
 cd .agents
-./scripts/bootstrap.sh
+./scripts/agents.sh setup
 ```
 
-The installer asks for just two decisions: a work pack and a host. It adds Foundation (whose technical profile name is `core`), installs the pack, and offers the connection. Then verify the installation:
-
-```bash
-./scripts/doctor.sh
-```
-
-On Windows, use PowerShell:
+On Windows:
 
 ```powershell
 git clone https://github.com/bearatol/.agents.git
 Set-Location .agents
-.\scripts\install.ps1 -Profile core,software -HostName codex
-.\scripts\doctor.ps1
+.\scripts\agents.ps1 setup
 ```
 
-## Choose a work pack
+Setup asks what kind of work you do and which AI host you use. It shows the plan before writing anything.
 
-Foundation is the shared base: rules, CEO, routing, skill discovery, context engineering, natural writing, and quality review. `core` remains its technical name for command compatibility.
+## Combine work packs or install everything
 
-| If you want to… | Choose |
+Repeat `--profile` to combine packs; add `core` for the shared rules and specialists. For example, software and video work:
+
+```bash
+./scripts/agents.sh setup --profile core --profile software --profile video --host codex
+```
+
+On Windows:
+
+```powershell
+.\scripts\agents.ps1 setup --profile core --profile software --profile video --host codex
+```
+
+To install every profile, use `all`; it already includes `core`:
+
+```bash
+./scripts/agents.sh setup --profile all --host codex
+```
+
+## Five commands
+
+| Goal | macOS / Linux / WSL | Windows |
+| --- | --- | --- |
+| Install or extend the workspace | `./scripts/agents.sh setup` | `.\scripts\agents.ps1 setup` |
+| Inspect the current state | `./scripts/agents.sh status` | `.\scripts\agents.ps1 status` |
+| Export portable configuration | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
+| Restore on a new computer | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
+| Run the complete health check | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+
+The existing install, connect, update, and list scripts remain available for automation and advanced control.
+
+## First useful request
+
+Open or restart the selected AI host after setup, then give it a normal task:
+
+> Review this project for bugs. Start with a short plan, make only approved changes, and show the test evidence.
+
+For a multi-disciplinary task:
+
+> Run a complete product audit with the CEO. Use specialists only where they add concrete value and return evidence for every conclusion.
+
+## Move to a new computer
+
+On the old computer:
+
+Export from a trusted checkout with no uncommitted changes so its contents exactly match the commit recorded in the lock.
+
+```bash
+./scripts/agents.sh status
+./scripts/agents.sh export ./agents.lock.json
+```
+
+Copy `agents.lock.json`, clone the repository on the new computer, and independently review the full commit SHA recorded in the lock. Switch a clean checkout with no local changes to that reviewed commit, then run:
+
+```bash
+./scripts/agents.sh restore ./agents.lock.json
+./scripts/agents.sh doctor
+```
+
+Restore never performs fetch, checkout, downgrade, deletion, or forced overwrite. It validates the lock and preflights destinations before persistent writes. See [portability and recovery](docs/PORTABILITY.md).
+
+| Moves | Does not move |
 | --- | --- |
-| Build and review software | `software` |
-| Research markets, market, and launch | `marketing` |
-| Write documentation, articles, and product copy | `content` |
-| Design interfaces | `design` |
-| Plan and make video | `video` |
-| Handle large tasks and context handoffs | `context` |
-| Set up the local MLX helper without model weights | `local-models` |
+| Selected profiles and explicit components | Accounts and authentication |
+| Supported host connections | API keys and other secrets |
+| Exact repository commit and ecosystem version | AI applications and CLI packages |
+| Managed rules, skills, and agents | Model weights, plugins, and unrelated dotfiles |
 
-Inspect exact contents before installing:
+This restores the managed `.agents` workspace; it is not a whole-computer backup.
 
-```bash
-./scripts/list.sh --profile software
-```
+## Status vocabulary
 
-## Connect and verify
+- `current`: installed content matches its source;
+- `missing`: a managed target is absent;
+- `managed-stale`: the source changed while the installed copy stayed managed;
+- `locally-modified`: installed content was changed locally;
+- `host-conflicting`: a host connection is missing or occupied by unmanaged content.
 
-Codex, Claude Code, Gemini, Koda, Yandex SourceCraft, and a generic mode are supported. Quick start connects the selected host; add another later:
+`status` inspects the installed workspace. `doctor` also validates the catalog, profiles, repository text, forbidden artifacts, and host integration. Unsafe or incomplete state returns a non-zero exit code.
 
-```bash
-./scripts/connect.sh --host claude
-./scripts/doctor.sh
-```
+## Choose a work profile
 
-Adapters create managed links to installed skills and do not replace your existing user instructions. See [host support](docs/HOSTS.md) for details, including Windows and WSL.
+| Work | Profile |
+| --- | --- |
+| Software development and review | `software` |
+| Research, marketing, and launches | `marketing` |
+| Documentation and product content | `content` |
+| Interface design | `design` |
+| Video planning and production | `video` |
+| Long tasks and context handoffs | `context` |
+| Local MLX helper without model weights | `local-models` |
 
-## Keeping context focused
+Interactive setup includes Foundation (`core`) automatically. When choosing profiles explicitly, add `--profile core` yourself or use `--profile all`. Inspect exact contents with `./scripts/list.sh --profile software`.
 
-Foundation keeps concise shared rules in one place. A work pack adds only domain-specific instructions, while the CEO can split a complex goal into verifiable specialist tasks. Each result should return the work completed, verification, skills used, and remaining risks.
+## Trust boundary
 
-This is an operating approach, not a promise of a fixed token reduction or universal quality: results still depend on the task, model, and review.
+The lock contains only schema version, ecosystem version, full commit SHA, profiles, components, and hosts. It contains no paths, commands, URLs, environment variables, credentials, or file contents. Local modifications and unmanaged files are preserved; conflicts require an explicit decision.
 
-## When you need more control
+Learn more: [hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [orchestration](docs/ORCHESTRATION.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md).
 
-<details>
-<summary>Non-interactive installation and individual components</summary>
-
-```bash
-./scripts/install.sh --profile core --profile marketing --host codex
-./scripts/install.sh --component skill:copywriting
-```
-
-Run `./scripts/list.sh` to see every maintained profile. The `all` profile is for cases that genuinely need the whole collection.
-</details>
-
-<details>
-<summary>CEO and subagents</summary>
-
-The CEO decomposes a goal and recommends specialists; every specialist chooses skills within its task and permissions. The security reviewer is isolated from optional skills. See [Architecture](docs/ARCHITECTURE.md) and [Orchestration](docs/ORCHESTRATION.md).
-
-```bash
-~/.agents/tools/team/team.sh recommend --tags software,quality
-```
-</details>
-
-<details>
-<summary>Updates, local models, and contributing</summary>
-
-Review the exact upstream commit before updating, then run:
-
-```bash
-./scripts/update.sh APPROVED_40_CHARACTER_COMMIT
-```
-
-`local-models` installs documentation and loopback-only helpers, not model weights or a virtual environment. See [CONNECT.md](CONNECT.md), [SECURITY.md](SECURITY.md), [THIRD_PARTY.md](THIRD_PARTY.md), and [CONTRIBUTING.md](CONTRIBUTING.md) for updates, safety, licensing, and contribution rules.
-</details>
-
-Repository components are original project work and licensed under [MIT](LICENSE).
+Licensed under the [MIT License](LICENSE).

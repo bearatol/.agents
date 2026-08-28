@@ -36,6 +36,34 @@ macOS/Linux/WSL and PowerShell on native Windows.
 
 ## Human commands
 
+Use the five-command interface for normal work:
+
+```bash
+./scripts/agents.sh setup
+./scripts/agents.sh status
+./scripts/agents.sh export ./agents.lock.json
+./scripts/agents.sh restore ./agents.lock.json
+./scripts/agents.sh doctor
+```
+
+Native Windows:
+
+```powershell
+.\scripts\agents.ps1 setup
+.\scripts\agents.ps1 status
+.\scripts\agents.ps1 export .\agents.lock.json
+.\scripts\agents.ps1 restore .\agents.lock.json
+.\scripts\agents.ps1 doctor
+```
+
+`setup` asks for one work pack and one host. `status` reports installed and host
+drift. `export` refuses to overwrite an existing file. `restore` accepts only a
+strict portable manifest and requires the current trusted checkout to match its
+full commit SHA; it never fetches, changes Git state, deletes content, or enables
+forced overwrite.
+
+The lower-level commands remain available for automation:
+
 ```bash
 ./scripts/list.sh
 ./scripts/install.sh --profile core --profile marketing
@@ -45,7 +73,7 @@ macOS/Linux/WSL and PowerShell on native Windows.
 ~/.agents/tools/team/team.sh recommend --tags software,quality
 ```
 
-Native Windows:
+Lower-level native Windows:
 
 ```powershell
 .\scripts\install.ps1 -Profile core,marketing -HostName codex,koda,sourcecraft

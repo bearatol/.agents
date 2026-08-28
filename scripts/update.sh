@@ -28,5 +28,23 @@ args=()
 while IFS= read -r profile; do
   [[ -n "$profile" ]] && args+=(--profile "$profile")
 done < "$DEST_HOME/.ecosystem-profiles"
+if [[ -f "$DEST_HOME/.ecosystem-components" ]]; then
+  while IFS= read -r component; do
+    [[ -n "$component" ]] && args+=(--component "$component")
+  done < "$DEST_HOME/.ecosystem-components"
+fi
+host_args=()
+if [[ -f "$DEST_HOME/.ecosystem-hosts" ]]; then
+  while IFS= read -r host; do
+    [[ -n "$host" ]] && host_args+=(--host "$host")
+  done < "$DEST_HOME/.ecosystem-hosts"
+fi
+"$SCRIPT_DIR/install.sh" "${args[@]}" --dry-run
+if [[ ${#host_args[@]} -gt 0 ]]; then
+  "$SCRIPT_DIR/connect.sh" "${host_args[@]}" --dry-run
+fi
 "$SCRIPT_DIR/install.sh" "${args[@]}"
+if [[ ${#host_args[@]} -gt 0 ]]; then
+  "$SCRIPT_DIR/connect.sh" "${host_args[@]}"
+fi
 "$SCRIPT_DIR/doctor.sh"

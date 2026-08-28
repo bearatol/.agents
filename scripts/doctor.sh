@@ -58,5 +58,12 @@ else
   warn "no installation manifest at $DEST_HOME/.ecosystem-installed"
 fi
 
+if [[ -f "$DEST_HOME/.ecosystem-installed" ]] && command -v python3 >/dev/null 2>&1; then
+  if ! python3 "$ROOT/scripts/environment.py" status \
+    --repo "$ROOT" --home "$DEST_HOME" --user-home "$HOME"; then
+    error "installed environment has missing, stale, modified, or host-conflicting targets"
+  fi
+fi
+
 printf 'Doctor finished: %d errors, %d warnings.\n' "$ERRORS" "$WARNINGS"
-[[ $ERRORS -eq 0 ]]
+[[ $ERRORS -eq 0 && $WARNINGS -eq 0 ]]

@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0 - 2026-08-28
+
+- Added one five-command workflow for setup, status, export, restore, and doctor.
+- Added strict portable environment locks for profiles, explicit components,
+  hosts, ecosystem version, and exact Git commit.
+- Added drift-aware health checks and fail-closed host preflight on Bash and
+  PowerShell.
+- Made export fail closed on source or installed drift while allowing only the
+  validated lock itself as untracked input during restore.
+- Persisted host and explicit-component selections so updates can replay them.
+- Added clean-machine restore, malicious-manifest, conflict, traversal,
+  detached-HEAD, Windows-state, and idempotency coverage.
+- Reworked onboarding around first use, daily health, and moving to a new
+  computer.
+
 ## 0.3.1 - 2026-08-27
 
 - Fixed Windows CI exit propagation after expected negative security tests.

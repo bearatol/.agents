@@ -37,6 +37,30 @@ try {
   }
   & (Join-Path $RepoRoot 'scripts/doctor.ps1')
   if ($LASTEXITCODE) { throw 'PowerShell doctor failed' }
+  if (-not (Test-Path -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts'))) {
+    throw 'PowerShell install did not persist selected hosts.'
+  }
+  $PortableManifest = Join-Path $TestRoot 'environment.lock.json'
+  & (Join-Path $RepoRoot 'scripts/agents.ps1') export $PortableManifest
+  if ($LASTEXITCODE -or -not (Test-Path -LiteralPath $PortableManifest)) {
+    throw 'PowerShell portable export failed.'
+  }
+  & (Join-Path $RepoRoot 'scripts/agents.ps1') status
+  if ($LASTEXITCODE) { throw 'PowerShell portable status failed.' }
+  & (Join-Path $RepoRoot 'scripts/install.ps1') -Profile all -HostName codex
+  if ($LASTEXITCODE) { throw 'Repeated PowerShell setup with a managed host failed.' }
+
+  $ExplicitAgentsHome = $env:AGENTS_HOME
+  $ExplicitUserProfile = $env:USERPROFILE
+  $env:USERPROFILE = Join-Path $TestRoot 'default-home-user'
+  New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
+  Remove-Item Env:AGENTS_HOME -ErrorAction SilentlyContinue
+  & (Join-Path $RepoRoot 'scripts/install.ps1') -Profile core -HostName generic
+  if ($LASTEXITCODE -or -not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE '.agents/.ecosystem-installed'))) {
+    throw 'PowerShell setup failed when AGENTS_HOME was unset.'
+  }
+  $env:USERPROFILE = $ExplicitUserProfile
+  $env:AGENTS_HOME = $ExplicitAgentsHome
 
   $CustomizedSkill = Join-Path $env:AGENTS_HOME 'skills/context-engineering/SKILL.md'
   Add-Content -LiteralPath $CustomizedSkill -Value 'local customization'
