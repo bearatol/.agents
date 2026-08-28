@@ -33,8 +33,15 @@ contains_literal() {
   fi
 }
 
-python3 "$ROOT/tests/test_portability.py" > "$TEST_HOME/portability.log" 2>&1 &
-PORTABILITY_PID=$!
+if [[ "${CI:-}" == true && "${SKIP_PORTABILITY:-0}" == 1 ]]; then
+  printf 'CI must run portability tests\n' >&2
+  exit 1
+fi
+
+if [[ "${SKIP_PORTABILITY:-0}" != 1 ]]; then
+  python3 "$ROOT/tests/test_portability.py" > "$TEST_HOME/portability.log" 2>&1 &
+  PORTABILITY_PID=$!
+fi
 
 PREFLIGHT_AGENTS_HOME="$TEST_HOME/preflight-agents"
 PREFLIGHT_USER_HOME="$TEST_HOME/preflight-user"
@@ -139,9 +146,9 @@ done
 ALL_DRY_RUN_HOME="$TEST_HOME/all-dry-run-agents"
 HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \
   "$ROOT/scripts/agents.sh" setup --work all --app generic --dry-run >/dev/null
-"$ROOT/scripts/install.sh" --profile all
-"$ROOT/scripts/connect.sh" --host generic
-"$ROOT/scripts/doctor.sh"
+"$ROOT/scripts/install.sh" --profile all >/dev/null
+"$ROOT/scripts/connect.sh" --host generic >/dev/null
+"$ROOT/scripts/doctor.sh" >/dev/null
 
 [[ -f "$AGENTS_HOME/skills/natural-writing/SKILL.md" ]]
 [[ -f "$AGENTS_HOME/skills/ceo/SKILL.md" ]]
@@ -179,7 +186,7 @@ HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \
 "$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate result \
   "$AGENTS_HOME/orchestration/templates/result.json"
 
-HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft --host koda
+HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft --host koda >/dev/null
 [[ -f "$TEST_USER_HOME/.codex/agents/ceo.toml" ]]
 [[ -f "$TEST_USER_HOME/.claude/agents/engineer.md" ]]
 [[ -f "$TEST_USER_HOME/.gemini/agents/marketer.md" ]]
@@ -247,12 +254,14 @@ printf 'personal rules\n' > "$AGENTS_HOME/AGENTS.md"
   --preserve-agents-file >/dev/null
 grep -q '^personal rules$' "$AGENTS_HOME/AGENTS.md"
 
-if ! wait "$PORTABILITY_PID"; then
+if [[ -n "$PORTABILITY_PID" ]]; then
+  if ! wait "$PORTABILITY_PID"; then
+    PORTABILITY_PID=""
+    cat "$TEST_HOME/portability.log" >&2
+    exit 1
+  fi
   PORTABILITY_PID=""
-  cat "$TEST_HOME/portability.log" >&2
-  exit 1
+  cat "$TEST_HOME/portability.log"
 fi
-PORTABILITY_PID=""
-cat "$TEST_HOME/portability.log"
 
 printf 'All tests passed.\n'
