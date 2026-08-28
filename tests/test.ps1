@@ -8,6 +8,16 @@ try {
   $env:USERPROFILE = Join-Path $TestRoot 'user'
   $env:AGENTS_HOME = Join-Path $TestRoot '.agents'
   New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
+  & (Join-Path $RepoRoot 'scripts/agents.ps1') setup -Work code,video -App codex
+  if ($LASTEXITCODE) { throw 'PowerShell human-friendly multi-work setup failed.' }
+  foreach ($Profile in @('core', 'software', 'video')) {
+    if (-not (Select-String -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-profiles') -SimpleMatch $Profile -Quiet)) {
+      throw "PowerShell setup did not record $Profile."
+    }
+  }
+  if (-not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE '.codex/agents/video-producer.toml'))) {
+    throw 'PowerShell human-friendly setup did not connect Codex.'
+  }
   & (Join-Path $RepoRoot 'scripts/install.ps1') -Profile all -HostName generic
   if ($LASTEXITCODE) { throw 'PowerShell install failed' }
   foreach ($Path in @(

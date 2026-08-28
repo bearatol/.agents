@@ -14,7 +14,7 @@ $AgentsHome = Get-AeAgentsHome
 $Python = Get-Command python3, python, py -ErrorAction SilentlyContinue | Select-Object -First 1
 
 function Show-Usage {
-    Write-Host 'Usage: agents.ps1 setup [install options]'
+    Write-Host 'Usage: agents.ps1 setup [-Work NAME ...] [-App NAME]'
     Write-Host '       agents.ps1 status'
     Write-Host '       agents.ps1 export OUTPUT.json'
     Write-Host '       agents.ps1 restore MANIFEST.json'
@@ -24,8 +24,7 @@ function Show-Usage {
 try {
     switch ($Command) {
         'setup' {
-            if ($Arguments.Count -eq 0) { & (Join-Path $PSScriptRoot 'bootstrap.ps1') }
-            else { & (Join-Path $PSScriptRoot 'install.ps1') @Arguments }
+            & (Join-Path $PSScriptRoot 'bootstrap.ps1') @Arguments
             if (-not $?) { exit 1 }
         }
         'status' {

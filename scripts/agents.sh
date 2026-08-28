@@ -11,7 +11,7 @@ ROOT="$(repo_root)"
 DEST_HOME="$(agents_home)"
 
 usage() {
-  printf '%s\n' 'Usage: agents.sh setup [install options]'
+  printf '%s\n' 'Usage: agents.sh setup [--work NAME ...] [--app NAME]'
   printf '%s\n' '       agents.sh status'
   printf '%s\n' '       agents.sh export OUTPUT.json'
   printf '%s\n' '       agents.sh restore MANIFEST.json'
@@ -24,10 +24,7 @@ shift
 
 case "$command_name" in
   setup)
-    if [[ $# -eq 0 ]]; then
-      exec "$SCRIPT_DIR/bootstrap.sh"
-    fi
-    exec "$SCRIPT_DIR/install.sh" "$@"
+    exec "$SCRIPT_DIR/bootstrap.sh" "$@"
     ;;
   status)
     [[ $# -eq 0 ]] || fail 'status takes no arguments'

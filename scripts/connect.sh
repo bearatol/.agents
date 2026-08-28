@@ -10,6 +10,7 @@ source "$SCRIPT_DIR/lib.sh"
 ROOT="$(repo_root)"
 DEST_HOME="$(agents_home)"
 validate_agents_home "$DEST_HOME"
+MANAGED_HOME="${AE_MANAGED_HOME:-$DEST_HOME}"
 STATE_FILE="$DEST_HOME/.ecosystem-state.json"
 STATE_TOOL="$ROOT/scripts/state.py"
 declare -a HOSTS=()
@@ -27,6 +28,10 @@ while [[ $# -gt 0 ]]; do
 done
 
 [[ ${#HOSTS[@]} -gt 0 ]] || fail "select at least one host"
+[[ "$MANAGED_HOME" == /* ]] || fail "managed home must be an absolute path"
+if [[ "$MANAGED_HOME" != "$DEST_HOME" && $DRY_RUN -ne 1 ]]; then
+  fail "managed home override is allowed only during preflight"
+fi
 REQUIRES_FOUNDATION=0
 for host in "${HOSTS[@]}"; do
   case "$host" in
@@ -66,7 +71,7 @@ preflight_skills() {
     [[ -d "$skill" && -f "$skill/SKILL.md" ]] || continue
     name="$(basename "$skill")"
     target="$target_root/$name"
-    expected="$DEST_HOME/skills/$name"
+    expected="$MANAGED_HOME/skills/$name"
     if [[ -L "$target" ]]; then
       if [[ "$(readlink "$target")" == "$expected" ]]; then continue; fi
       printf 'host conflict: %s\n' "$target" >&2

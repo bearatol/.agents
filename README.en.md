@@ -31,26 +31,26 @@ Set-Location .agents
 .\scripts\agents.ps1 setup
 ```
 
-Setup asks what kind of work you do and which AI host you use. It shows the plan before writing anything.
+Setup asks what you want help with and which AI application you use. You can choose several areas, such as code and video. It shows a plain-language confirmation before changing anything.
 
-## Combine work packs or install everything
+## Combine work areas or install everything
 
-Repeat `--profile` to combine packs; add `core` for the shared rules and specialists. For example, software and video work:
+If you prefer not to answer questions, name the work directly. For example, code and video:
 
 ```bash
-./scripts/agents.sh setup --profile core --profile software --profile video --host codex
+./scripts/agents.sh setup --work code --work video --app codex
 ```
 
 On Windows:
 
 ```powershell
-.\scripts\agents.ps1 setup --profile core --profile software --profile video --host codex
+.\scripts\agents.ps1 setup -Work code,video -App codex
 ```
 
-To install every profile, use `all`; it already includes `core`:
+To install everything:
 
 ```bash
-./scripts/agents.sh setup --profile all --host codex
+./scripts/agents.sh setup --work all --app codex
 ```
 
 ## Five commands
@@ -114,19 +114,19 @@ This restores the managed `.agents` workspace; it is not a whole-computer backup
 
 `status` inspects the installed workspace. `doctor` also validates the catalog, profiles, repository text, forbidden artifacts, and host integration. Unsafe or incomplete state returns a non-zero exit code.
 
-## Choose a work profile
+## Choose what you need help with
 
-| Work | Profile |
+| Goal | Choose during setup |
 | --- | --- |
-| Software development and review | `software` |
-| Research, marketing, and launches | `marketing` |
-| Documentation and product content | `content` |
-| Interface design | `design` |
-| Video planning and production | `video` |
-| Long tasks and context handoffs | `context` |
-| Local MLX helper without model weights | `local-models` |
+| Software development and review | Code |
+| Research, marketing, and launches | Research and marketing |
+| Documentation and product content | Writing |
+| Interface design | Design |
+| Video planning and production | Video |
+| Long tasks and context handoffs | Complex tasks |
+| A local AI helper | Local AI |
 
-Interactive setup includes Foundation (`core`) automatically. When choosing profiles explicitly, add `--profile core` yourself or use `--profile all`. Inspect exact contents with `./scripts/list.sh --profile software`.
+Shared safety rules, quality checks, and basic helpers are added automatically. You do not need to learn their internal names.
 
 ## Trust boundary
 

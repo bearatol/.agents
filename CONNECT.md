@@ -56,7 +56,7 @@ Native Windows:
 .\scripts\agents.ps1 doctor
 ```
 
-`setup` asks for one work pack and one host. `status` reports installed and host
+`setup` asks for one or more work areas and one AI application. `status` reports installed and host
 drift. `export` refuses to overwrite an existing file. `restore` accepts only a
 strict portable manifest and requires the current trusted checkout to match its
 full commit SHA; it never fetches, changes Git state, deletes content, or enables

@@ -41,12 +41,27 @@ fi
 
 QUICK_START_AGENTS_HOME="$TEST_HOME/quick-start-agents"
 QUICK_START_USER_HOME="$TEST_HOME/quick-start-user"
-printf 'software\ncodex\ny\n' | \
+quick_start_output="$(printf '1,5\ncodex\ny\n' | \
   HOME="$QUICK_START_USER_HOME" AGENTS_HOME="$QUICK_START_AGENTS_HOME" \
-  "$ROOT/scripts/bootstrap.sh" >/dev/null
+  "$ROOT/scripts/bootstrap.sh")"
+if printf '%s\n' "$quick_start_output" | grep -Eiq 'core|profile|foundation'; then
+  printf 'interactive setup exposed implementation terminology\n' >&2
+  exit 1
+fi
 grep -qx 'core' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'software' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
+grep -qx 'video' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 [[ -f "$QUICK_START_USER_HOME/.codex/agents/engineer.toml" ]]
+[[ -f "$QUICK_START_USER_HOME/.codex/agents/video-producer.toml" ]]
+
+NONINTERACTIVE_AGENTS_HOME="$TEST_HOME/noninteractive-agents"
+NONINTERACTIVE_USER_HOME="$TEST_HOME/noninteractive-user"
+HOME="$NONINTERACTIVE_USER_HOME" AGENTS_HOME="$NONINTERACTIVE_AGENTS_HOME" \
+  "$ROOT/scripts/agents.sh" setup --work code --work video --app codex >/dev/null
+grep -qx 'core' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
+grep -qx 'software' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
+grep -qx 'video' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
+[[ -f "$NONINTERACTIVE_USER_HOME/.codex/agents/engineer.toml" ]]
 
 BASH32_AGENTS_HOME="$TEST_HOME/bash32-profile-only-agents"
 BASH32_USER_HOME="$TEST_HOME/bash32-profile-only-user"
@@ -56,8 +71,8 @@ grep -qx 'software' "$BASH32_AGENTS_HOME/.ecosystem-profiles"
 
 INVALID_INPUT_AGENTS_HOME="$TEST_HOME/invalid-input-agents"
 INVALID_INPUT_USER_HOME="$TEST_HOME/invalid-input-user"
-for invalid_host in invalid-host ../codex 'codex;touch' --host; do
-  if printf 'software\n%s\ny\n' "$invalid_host" | \
+for invalid_host in invalid-host ../codex 'codex;touch' --app; do
+  if printf '1\n%s\ny\n' "$invalid_host" | \
     HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
     "$ROOT/scripts/bootstrap.sh" >/dev/null 2>&1; then
     printf 'unsupported host unexpectedly succeeded: %s\n' "$invalid_host" >&2
@@ -77,7 +92,7 @@ fi
 HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
   "$ROOT/scripts/bootstrap.sh" --profile software --dry-run >/dev/null
 
-for invalid_work_pack in invalid-pack ../software 'software;touch' --profile; do
+for invalid_work_pack in 9 ../software '1;touch' --work; do
   if printf '%s\ncodex\ny\n' "$invalid_work_pack" | \
     HOME="$INVALID_INPUT_USER_HOME" AGENTS_HOME="$INVALID_INPUT_AGENTS_HOME" \
     "$ROOT/scripts/bootstrap.sh" >/dev/null 2>&1; then
@@ -87,11 +102,30 @@ for invalid_work_pack in invalid-pack ../software 'software;touch' --profile; do
 done
 [[ ! -e "$INVALID_INPUT_AGENTS_HOME" ]]
 
+CONFLICT_AGENTS_HOME="$TEST_HOME/setup-conflict-agents"
+CONFLICT_USER_HOME="$TEST_HOME/setup-conflict-user"
+mkdir -p "$CONFLICT_USER_HOME/.codex/skills"
+printf 'keep\n' > "$CONFLICT_USER_HOME/.codex/skills/ceo"
+if HOME="$CONFLICT_USER_HOME" AGENTS_HOME="$CONFLICT_AGENTS_HOME" \
+  "$ROOT/scripts/agents.sh" setup --work code --app codex >/dev/null 2>&1; then
+  printf 'host conflict unexpectedly succeeded\n' >&2
+  exit 1
+fi
+[[ ! -e "$CONFLICT_AGENTS_HOME" ]]
+
 [[ -f "$ROOT/README.md" ]]
 [[ -f "$ROOT/README.en.md" ]]
 [[ -f "$ROOT/README.zh-CN.md" ]]
+if rg -qi 'core|foundation|--profile' "$ROOT/README.md" "$ROOT/README.en.md" "$ROOT/README.zh-CN.md"; then
+  printf 'beginner documentation exposed implementation terminology\n' >&2
+  exit 1
+fi
 
-"$ROOT/scripts/install.sh" --profile all --host generic
+ALL_DRY_RUN_HOME="$TEST_HOME/all-dry-run-agents"
+HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \
+  "$ROOT/scripts/agents.sh" setup --work all --app generic --dry-run >/dev/null
+"$ROOT/scripts/install.sh" --profile all
+"$ROOT/scripts/connect.sh" --host generic
 "$ROOT/scripts/doctor.sh"
 
 [[ -f "$AGENTS_HOME/skills/natural-writing/SKILL.md" ]]

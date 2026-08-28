@@ -31,26 +31,26 @@ Set-Location .agents
 .\scripts\agents.ps1 setup
 ```
 
-Setup 只询问工作类型和使用的 AI host，并在写入前显示计划。
+安装会询问您希望 AI 帮您做什么，以及您使用哪个 AI 应用。可同时选择多个方向，例如“代码和视频”；在修改任何内容前会给出清晰确认。
 
 ## 组合多个工作配置或全部安装
 
-重复使用 `--profile` 即可组合多个配置；加入 `core` 可获得共享规则和专业 agents。例如，同时进行软件开发和视频工作：
+如果不想回答问题，可以直接写出需要的工作方向。例如，代码和视频：
 
 ```bash
-./scripts/agents.sh setup --profile core --profile software --profile video --host codex
+./scripts/agents.sh setup --work code --work video --app codex
 ```
 
 Windows：
 
 ```powershell
-.\scripts\agents.ps1 setup --profile core --profile software --profile video --host codex
+.\scripts\agents.ps1 setup -Work code,video -App codex
 ```
 
-如需安装所有 profiles，请使用 `all`；它已包含 `core`：
+如需全部安装：
 
 ```bash
-./scripts/agents.sh setup --profile all --host codex
+./scripts/agents.sh setup --work all --app codex
 ```
 
 ## 五个主要命令
@@ -114,19 +114,19 @@ Restore 不会自动执行 fetch、checkout、降级、删除或强制覆盖。�
 
 `status` 检查安装状态。`doctor` 还会验证 catalog、profiles、仓库文本、禁止的文件和 host 集成；不安全或不完整的状态会返回非零退出码。
 
-## 工作配置
+## 选择需要的帮助
 
-| 工作 | Profile |
+| 目标 | 在安装时选择 |
 | --- | --- |
-| 软件开发与审查 | `software` |
-| 市场研究、营销与发布 | `marketing` |
-| 文档和产品内容 | `content` |
-| 界面设计 | `design` |
-| 视频规划与制作 | `video` |
-| 长任务与上下文交接 | `context` |
-| 不含模型权重的本地 MLX helper | `local-models` |
+| 软件开发与审查 | 代码 |
+| 市场研究、营销与发布 | 研究与营销 |
+| 文档和产品内容 | 写作 |
+| 界面设计 | 设计 |
+| 视频规划与制作 | 视频 |
+| 长任务与上下文交接 | 复杂任务 |
+| 本地 AI helper | 本地 AI |
 
-交互式 setup 会自动包含 Foundation (`core`)。显式选择 profiles 时，请自行加入 `--profile core`，或使用 `--profile all`。可运行 `./scripts/list.sh --profile software` 查看准确内容。
+共享的安全规则、质量检查和基础帮助会自动加入；无需了解它们的内部名称。
 
 ## 信任边界
 

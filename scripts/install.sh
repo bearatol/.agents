@@ -55,6 +55,41 @@ done
 
 [[ ${#PROFILES[@]} -gt 0 || ${#COMPONENTS[@]} -gt 0 ]] || fail "select at least one profile or component"
 
+preflight_hosts() {
+  local preflight_root preflight_home
+  local -a selection_args host_args
+  selection_args=()
+  host_args=()
+  local profile component host
+  for profile in "${PROFILES[@]}"; do selection_args+=(--profile "$profile"); done
+  for component in "${COMPONENTS[@]}"; do selection_args+=(--component "$component"); done
+  for host in "${HOSTS[@]}"; do host_args+=(--host "$host"); done
+  [[ $ROOT_FILES -eq 1 ]] || selection_args+=(--no-root-files)
+  [[ $PRESERVE_AGENTS_FILE -eq 0 ]] || selection_args+=(--preserve-agents-file)
+
+  # Check the real installation first, then build an isolated copy for host checks.
+  "$SCRIPT_DIR/install.sh" "${selection_args[@]}" --dry-run >/dev/null
+  preflight_root="$(mktemp -d)"
+  preflight_home="$preflight_root/agents"
+  if ! AGENTS_HOME="$preflight_home" "$SCRIPT_DIR/install.sh" "${selection_args[@]}" >/dev/null; then
+    rm -rf "$preflight_root"
+    return 1
+  fi
+  if [[ -f "$STATE_FILE" && ! -L "$STATE_FILE" ]]; then
+    cp "$STATE_FILE" "$preflight_home/.ecosystem-state.json"
+  fi
+  if ! AGENTS_HOME="$preflight_home" AE_MANAGED_HOME="$DEST_HOME" \
+    "$SCRIPT_DIR/connect.sh" --dry-run "${host_args[@]}"; then
+    rm -rf "$preflight_root"
+    return 1
+  fi
+  rm -rf "$preflight_root"
+}
+
+if [[ ${#HOSTS[@]} -gt 0 && $DRY_RUN -eq 0 ]]; then
+  preflight_hosts
+fi
+
 state_matches() {
   local component_id="$1"
   local path="$2"

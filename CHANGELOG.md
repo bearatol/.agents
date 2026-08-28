@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.5.0 - 2026-08-29
+
+- Reworked setup around plain-language work choices, including several choices
+  at once or everything, while adding shared checks automatically.
+- Added human-friendly noninteractive setup commands for Bash and PowerShell.
+- Preflight host conflicts before persistent installation for Bash setup and
+  direct installation, so a known conflict leaves the selected environment
+  untouched.
+- Added Bash and PowerShell regression coverage for multi-choice setup and
+  expanded malicious-input and host-conflict checks.
+
 ## 0.4.0 - 2026-08-28
 
 - Added one five-command workflow for setup, status, export, restore, and doctor.
