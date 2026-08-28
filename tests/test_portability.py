@@ -55,7 +55,11 @@ class PortableWorkflowTests(unittest.TestCase):
         run("git", "-C", cls.clean_root, "config", "user.email", "test@example.invalid")
         run("git", "-C", cls.clean_root, "config", "user.name", "Portability Test")
         run("git", "-C", cls.clean_root, "add", ".")
-        run("git", "-C", cls.clean_root, "commit", "-m", "test snapshot")
+        staged = run("git", "-C", cls.clean_root, "diff", "--cached", "--quiet", check=False)
+        if staged.returncode == 1:
+            run("git", "-C", cls.clean_root, "commit", "--no-verify", "-m", "test snapshot")
+        elif staged.returncode != 0:
+            raise RuntimeError("could not inspect the temporary fixture index")
         run("git", "-C", cls.clean_root, "branch", "-M", "main")
         commit = run("git", "-C", cls.clean_root, "rev-parse", "HEAD").stdout.strip()
         run("git", "-C", cls.clean_root, "update-ref", "refs/remotes/origin/main", commit)

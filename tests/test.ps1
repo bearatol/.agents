@@ -18,6 +18,12 @@ try {
   if (-not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE '.codex/agents/video-producer.toml'))) {
     throw 'PowerShell human-friendly setup did not connect Codex.'
   }
+  & (Join-Path $RepoRoot 'scripts/doctor.ps1')
+  if ($LASTEXITCODE) { throw 'PowerShell human-friendly setup failed doctor.' }
+
+  $env:USERPROFILE = Join-Path $TestRoot 'all-user'
+  $env:AGENTS_HOME = Join-Path $TestRoot 'all-agents'
+  New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
   & (Join-Path $RepoRoot 'scripts/install.ps1') -Profile all -HostName generic
   if ($LASTEXITCODE) { throw 'PowerShell install failed' }
   foreach ($Path in @(
