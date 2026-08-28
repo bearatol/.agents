@@ -341,6 +341,52 @@ def host_target(user_home, host, state_id):
     return None
 
 
+def resolved_child(path, root):
+    """Return a resolved path only when it remains inside the given root."""
+    try:
+        resolved_path = pathlib.Path(path).resolve()
+        resolved_root = pathlib.Path(root).resolve()
+        resolved_path.relative_to(resolved_root)
+    except (OSError, ValueError):
+        return None
+    return resolved_path
+
+
+def windows_skill_matches_installed(home, user_home, host, state_id):
+    """Check a Windows-managed host skill against the installed skill copy."""
+    parts = state_id.split(":", 3)
+    if len(parts) != 4:
+        return False
+    _, state_host, kind, name = parts
+    if (
+        state_host != host
+        or kind != "skill"
+        or not re.fullmatch(r"[a-z0-9][a-z0-9-]*", name)
+    ):
+        return False
+    host_skills = {
+        "codex": user_home / ".codex" / "skills",
+        "claude": user_home / ".claude" / "skills",
+        "gemini": user_home / ".gemini" / "skills",
+    }.get(host)
+    installed_skills = home / "skills"
+    if host_skills is None or not host_skills.is_dir() or not installed_skills.is_dir():
+        return False
+    target = host_skills / name
+    source = installed_skills / name
+    if (
+        resolved_child(target, host_skills) is None
+        or resolved_child(source, installed_skills) is None
+        or not (target / "SKILL.md").is_file()
+        or not (source / "SKILL.md").is_file()
+    ):
+        return False
+    try:
+        return powershell_hash_path(target) == powershell_hash_path(source)
+    except OSError:
+        return False
+
+
 def run_status(repo, home, user_home):
     repo = pathlib.Path(repo)
     home = pathlib.Path(home)
@@ -407,8 +453,17 @@ def run_status(repo, home, user_home):
                 status = "host-conflicting"
             else:
                 try:
-                    actual_hash = powershell_hash_path(target) if entry.get("hash_kind") == "powershell" else digest_path(target)
-                    status = "current" if actual_hash == entry.get("installed_hash") else "host-conflicting"
+                    parts = state_id.split(":", 3)
+                    is_windows_skill = (
+                        entry.get("hash_kind") == "powershell"
+                        and len(parts) == 4
+                        and parts[2] == "skill"
+                    )
+                    if is_windows_skill:
+                        status = "current" if windows_skill_matches_installed(home, user_home, host, state_id) else "host-conflicting"
+                    else:
+                        actual_hash = digest_path(target)
+                        status = "current" if actual_hash == entry.get("installed_hash") else "host-conflicting"
                 except OSError:
                     status = "host-conflicting"
             print(f"{status:<14} {state_id}")

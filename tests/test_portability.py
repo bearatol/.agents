@@ -200,7 +200,7 @@ class PortableWorkflowTests(unittest.TestCase):
             "version": 1,
             "entries": [
                 {"id": "skill:sample", "hash": powershell_directory_hash(installed)},
-                {"id": "host:codex:skill:sample", "hash": powershell_directory_hash(host_copy)},
+                {"id": "host:codex:skill:sample", "hash": "legacy-windows-hash"},
             ],
         }
         self.home.mkdir(parents=True, exist_ok=True)
@@ -220,6 +220,37 @@ class PortableWorkflowTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertIn("current        host:codex:skill:sample", result.stdout)
+
+        (host_copy / "SKILL.md").write_text("changed\n", encoding="utf-8")
+        changed = run(
+            ENVIRONMENT,
+            "status",
+            "--repo",
+            repo,
+            "--home",
+            self.home,
+            "--user-home",
+            self.user,
+            check=False,
+        )
+        self.assertNotEqual(changed.returncode, 0)
+        self.assertIn("host-conflicting host:codex:skill:sample", changed.stdout)
+
+        state["entries"][1]["id"] = "host:codex:skill:../outside"
+        (self.home / ".ecosystem-state-windows.json").write_text(json.dumps(state), encoding="utf-8")
+        forged = run(
+            ENVIRONMENT,
+            "status",
+            "--repo",
+            repo,
+            "--home",
+            self.home,
+            "--user-home",
+            self.user,
+            check=False,
+        )
+        self.assertNotEqual(forged.returncode, 0)
+        self.assertIn("host-conflicting host:codex:skill:../outside", forged.stdout)
 
     def test_restore_rejects_untrusted_manifests_before_writes(self):
         commit = run("git", "rev-parse", "HEAD").stdout.strip()
