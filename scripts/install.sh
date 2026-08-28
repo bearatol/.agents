@@ -61,9 +61,15 @@ preflight_hosts() {
   selection_args=()
   host_args=()
   local profile component host
-  for profile in "${PROFILES[@]}"; do selection_args+=(--profile "$profile"); done
-  for component in "${COMPONENTS[@]}"; do selection_args+=(--component "$component"); done
-  for host in "${HOSTS[@]}"; do host_args+=(--host "$host"); done
+  if [[ ${#PROFILES[@]} -gt 0 ]]; then
+    for profile in "${PROFILES[@]}"; do selection_args+=(--profile "$profile"); done
+  fi
+  if [[ ${#COMPONENTS[@]} -gt 0 ]]; then
+    for component in "${COMPONENTS[@]}"; do selection_args+=(--component "$component"); done
+  fi
+  if [[ ${#HOSTS[@]} -gt 0 ]]; then
+    for host in "${HOSTS[@]}"; do host_args+=(--host "$host"); done
+  fi
   [[ $ROOT_FILES -eq 1 ]] || selection_args+=(--no-root-files)
   [[ $PRESERVE_AGENTS_FILE -eq 0 ]] || selection_args+=(--preserve-agents-file)
 

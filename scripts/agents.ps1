@@ -3,6 +3,18 @@ param(
     [Parameter(Mandatory = $true, Position = 0)]
     [ValidateSet('setup', 'status', 'export', 'restore', 'doctor', 'help')]
     [string] $Command,
+    [ValidateSet('code','research','writing','design','video','complex','local-ai','all')]
+    [string[]] $Work = @(),
+    [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+    [string[]] $App = @(),
+    [string[]] $Profile = @(),
+    [string[]] $Component = @(),
+    [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+    [string[]] $HostName = @(),
+    [switch] $Force,
+    [switch] $DryRun,
+    [switch] $NoRootFiles,
+    [switch] $PreserveAgentsFile,
     [Parameter(Position = 1, ValueFromRemainingArguments = $true)]
     [string[]] $Arguments = @()
 )
@@ -24,11 +36,22 @@ function Show-Usage {
 try {
     switch ($Command) {
         'setup' {
-            & (Join-Path $PSScriptRoot 'bootstrap.ps1') @Arguments
+            if ($Arguments.Count -ne 0) { throw "unknown setup option: $($Arguments[0])" }
+            $BootstrapArguments = @{
+                Work = $Work; App = $App; Profile = $Profile; Component = $Component; HostName = $HostName
+            }
+            if ($Force) { $BootstrapArguments.Force = $true }
+            if ($DryRun) { $BootstrapArguments.DryRun = $true }
+            if ($NoRootFiles) { $BootstrapArguments.NoRootFiles = $true }
+            if ($PreserveAgentsFile) { $BootstrapArguments.PreserveAgentsFile = $true }
+            & (Join-Path $PSScriptRoot 'bootstrap.ps1') @BootstrapArguments
             if (-not $?) { exit 1 }
         }
         'status' {
-            if ($Arguments.Count -ne 0) { throw 'status takes no arguments' }
+            if ($Arguments.Count -ne 0 -or $Work.Count -ne 0 -or $App.Count -ne 0 -or $Profile.Count -ne 0 -or
+                $Component.Count -ne 0 -or $HostName.Count -ne 0 -or $Force -or $DryRun -or $NoRootFiles -or $PreserveAgentsFile) {
+                throw 'status takes no arguments'
+            }
             if (-not $Python) { throw 'Python 3 is required.' }
             & $Python.Source (Join-Path $PSScriptRoot 'environment.py') status `
                 --repo $RepoRoot --home $AgentsHome --user-home (Get-AeUserHome)

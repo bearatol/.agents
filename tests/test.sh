@@ -20,6 +20,19 @@ export AGENTS_HOME="$TEST_HOME/.agents"
 TEST_USER_HOME="$TEST_HOME/user"
 mkdir -p "$TEST_USER_HOME"
 
+contains_literal() {
+  local needle="$1"
+  shift
+  if command -v rg >/dev/null 2>&1; then
+    rg --fixed-strings -qi -- "$needle" "$@"
+  elif command -v grep >/dev/null 2>&1; then
+    grep -Fqi -- "$needle" "$@"
+  else
+    printf 'tests require rg or grep\n' >&2
+    exit 1
+  fi
+}
+
 python3 "$ROOT/tests/test_portability.py" > "$TEST_HOME/portability.log" 2>&1 &
 PORTABILITY_PID=$!
 
@@ -43,7 +56,7 @@ QUICK_START_AGENTS_HOME="$TEST_HOME/quick-start-agents"
 QUICK_START_USER_HOME="$TEST_HOME/quick-start-user"
 quick_start_output="$(printf '1,5\ncodex\ny\n' | \
   HOME="$QUICK_START_USER_HOME" AGENTS_HOME="$QUICK_START_AGENTS_HOME" \
-  "$ROOT/scripts/bootstrap.sh")"
+  /bin/bash "$ROOT/scripts/bootstrap.sh")"
 if printf '%s\n' "$quick_start_output" | grep -Eiq 'core|profile|foundation'; then
   printf 'interactive setup exposed implementation terminology\n' >&2
   exit 1
@@ -57,7 +70,7 @@ grep -qx 'video' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 NONINTERACTIVE_AGENTS_HOME="$TEST_HOME/noninteractive-agents"
 NONINTERACTIVE_USER_HOME="$TEST_HOME/noninteractive-user"
 HOME="$NONINTERACTIVE_USER_HOME" AGENTS_HOME="$NONINTERACTIVE_AGENTS_HOME" \
-  "$ROOT/scripts/agents.sh" setup --work code --work video --app codex >/dev/null
+  /bin/bash "$ROOT/scripts/agents.sh" setup --work code --work video --app codex >/dev/null
 grep -qx 'core' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'software' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'video' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
@@ -116,10 +129,12 @@ fi
 [[ -f "$ROOT/README.md" ]]
 [[ -f "$ROOT/README.en.md" ]]
 [[ -f "$ROOT/README.zh-CN.md" ]]
-if rg -qi 'core|foundation|--profile' "$ROOT/README.md" "$ROOT/README.en.md" "$ROOT/README.zh-CN.md"; then
-  printf 'beginner documentation exposed implementation terminology\n' >&2
-  exit 1
-fi
+for forbidden_term in core foundation --profile; do
+  if contains_literal "$forbidden_term" "$ROOT/README.md" "$ROOT/README.en.md" "$ROOT/README.zh-CN.md"; then
+    printf 'beginner documentation exposed implementation terminology\n' >&2
+    exit 1
+  fi
+done
 
 ALL_DRY_RUN_HOME="$TEST_HOME/all-dry-run-agents"
 HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \
@@ -186,7 +201,8 @@ if grep -q 'activate_skill' "$TEST_USER_HOME/.gemini/agents/security-reviewer.md
   printf 'security reviewer unexpectedly received skill activation\n' >&2
   exit 1
 fi
-if rg -q '"name":"(design-master|team-lead)"' "$ROOT/catalog/catalog.json"; then
+if contains_literal '"name":"design-master"' "$ROOT/catalog/catalog.json" || \
+  contains_literal '"name":"team-lead"' "$ROOT/catalog/catalog.json"; then
   printf 'replaced agent remains in the canonical catalog\n' >&2
   exit 1
 fi

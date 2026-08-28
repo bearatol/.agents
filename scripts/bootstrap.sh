@@ -29,7 +29,9 @@ contains() {
 
 add_profile() {
   local profile="$1"
-  contains "$profile" "${PROFILES[@]}" || PROFILES+=("$profile")
+  if [[ ${#PROFILES[@]} -eq 0 ]] || ! contains "$profile" "${PROFILES[@]}"; then
+    PROFILES+=("$profile")
+  fi
 }
 
 add_host() {
@@ -38,12 +40,16 @@ add_host() {
     codex|claude|gemini|koda|sourcecraft|generic) ;;
     *) printf 'error: unsupported AI application: %s\n' "$host" >&2; exit 1 ;;
   esac
-  contains "$host" "${HOSTS[@]}" || HOSTS+=("$host")
+  if [[ ${#HOSTS[@]} -eq 0 ]] || ! contains "$host" "${HOSTS[@]}"; then
+    HOSTS+=("$host")
+  fi
 }
 
 add_selection_name() {
   local name="$1"
-  contains "$name" "${SELECTION_NAMES[@]}" || SELECTION_NAMES+=("$name")
+  if [[ ${#SELECTION_NAMES[@]} -eq 0 ]] || ! contains "$name" "${SELECTION_NAMES[@]}"; then
+    SELECTION_NAMES+=("$name")
+  fi
 }
 
 trim() {
@@ -55,7 +61,7 @@ trim() {
 
 add_work() {
   local work="$1"
-  if [[ "$work" != all ]] && contains all "${PROFILES[@]}"; then
+  if [[ "$work" != all && ${#PROFILES[@]} -gt 0 ]] && contains all "${PROFILES[@]}"; then
     printf 'error: "all" cannot be combined with another work choice\n' >&2
     exit 1
   fi
@@ -68,7 +74,7 @@ add_work() {
     complex) add_profile context; add_selection_name 'Organize complex tasks' ;;
     local-ai) add_profile local-models; add_selection_name 'Use a local AI helper' ;;
     all)
-      contains all "${PROFILES[@]}" && return
+      if [[ ${#PROFILES[@]} -gt 0 ]] && contains all "${PROFILES[@]}"; then return; fi
       [[ ${#PROFILES[@]} -eq 0 ]] || { printf 'error: "all" cannot be combined with another work choice\n' >&2; exit 1; }
       add_profile all
       add_selection_name 'Everything'
@@ -172,17 +178,25 @@ add_profile core
 
 args=()
 for profile in "${PROFILES[@]}"; do args+=(--profile "$profile"); done
-for component in "${COMPONENTS[@]}"; do args+=(--component "$component"); done
-for host in "${HOSTS[@]}"; do args+=(--host "$host"); done
-args+=("${INSTALL_OPTIONS[@]}")
+if [[ ${#COMPONENTS[@]} -gt 0 ]]; then
+  for component in "${COMPONENTS[@]}"; do args+=(--component "$component"); done
+fi
+if [[ ${#HOSTS[@]} -gt 0 ]]; then
+  for host in "${HOSTS[@]}"; do args+=(--host "$host"); done
+fi
+if [[ ${#INSTALL_OPTIONS[@]} -gt 0 ]]; then
+  args+=("${INSTALL_OPTIONS[@]}")
+fi
 
 if [[ $interactive -eq 1 ]]; then
   printf '\nYou selected: '
   separator=''
-  for selection in "${SELECTION_NAMES[@]}"; do
-    printf '%s%s' "$separator" "$selection"
-    separator=', '
-  done
+  if [[ ${#SELECTION_NAMES[@]} -gt 0 ]]; then
+    for selection in "${SELECTION_NAMES[@]}"; do
+      printf '%s%s' "$separator" "$selection"
+      separator=', '
+    done
+  fi
   printf '\nAI application: %s\n' "${HOSTS[*]}"
   printf 'Continue? [y/N] '
   IFS= read -r answer
