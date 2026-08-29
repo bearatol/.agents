@@ -54,14 +54,18 @@ try {
             }
             if (-not $Python) { throw 'Python 3 is required.' }
             & $Python.Source (Join-Path $PSScriptRoot 'environment.py') status `
-                --repo $RepoRoot --home $AgentsHome --user-home (Get-AeUserHome)
-            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+                --repo $RepoRoot --home $AgentsHome --user-home (Get-AeUserHome) --skip-windows-host-skills
+            $EnvironmentStatus = $LASTEXITCODE
+            $HostSkillsCurrent = Test-AeWindowsHostSkillsState
+            if ($EnvironmentStatus -ne 0 -or -not $HostSkillsCurrent) { exit 1 }
         }
         'export' {
             if ($Arguments.Count -ne 1) { throw 'usage: agents.ps1 export OUTPUT.json' }
             if (-not $Python) { throw 'Python 3 is required.' }
+            if (-not (Test-AeWindowsHostSkillsState)) { exit 1 }
             & $Python.Source (Join-Path $PSScriptRoot 'environment.py') export `
-                --repo $RepoRoot --home $AgentsHome --user-home (Get-AeUserHome) --output $Arguments[0]
+                --repo $RepoRoot --home $AgentsHome --user-home (Get-AeUserHome) --output $Arguments[0] `
+                --skip-windows-host-skills
             if ($LASTEXITCODE) { exit $LASTEXITCODE }
         }
         'restore' {

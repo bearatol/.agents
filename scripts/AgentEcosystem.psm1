@@ -432,6 +432,37 @@ function Connect-AeHosts {
     if ($conflicts -gt 0) { throw "$conflicts host adapter conflict(s) require review." }
 }
 
+function Test-AeWindowsHostSkillsState {
+    $homePath = Get-AeAgentsHome
+    $state = Read-AeState (Join-Path $homePath '.ecosystem-state-windows.json')
+    $errors = 0
+    foreach ($stateId in @($state.Keys | Where-Object { $_ -like 'host:*' } | Sort-Object)) {
+        $match = [regex]::Match($stateId, '^host:(codex|claude|gemini):skill:([a-z0-9][a-z0-9-]*)$')
+        if (-not $match.Success) { continue }
+        $hostName = $match.Groups[1].Value
+        $name = $match.Groups[2].Value
+        $paths = Get-AeHostPaths $hostName
+        $source = Join-Path $homePath "skills/$name"
+        $destination = Join-Path $paths.Skills $name
+        try {
+            Assert-AeSafeDestination -Path $source -SafetyRoot $homePath
+            Assert-AeSafeDestination -Path $destination -SafetyRoot $paths.Skills
+            $sourceHash = Get-AePathHash $source
+            $destinationHash = Get-AePathHash $destination
+            if ($null -eq $sourceHash -or $sourceHash -ne $destinationHash -or $destinationHash -ne $state[$stateId]) {
+                Write-Error "host-conflicting $stateId" -ErrorAction Continue
+                $errors++
+            } else {
+                Write-Host "current        $stateId"
+            }
+        } catch {
+            Write-Error "host-conflicting $stateId" -ErrorAction Continue
+            $errors++
+        }
+    }
+    return $errors -eq 0
+}
+
 function Invoke-AeDoctor {
     $root = Get-AeRepoRoot
     $homePath = Get-AeAgentsHome
@@ -476,8 +507,10 @@ function Invoke-AeDoctor {
     }
     if ($python -and (Test-Path -LiteralPath $manifest -PathType Leaf)) {
         & $python (Join-Path $root 'scripts/environment.py') status `
-            --repo $root --home $homePath --user-home (Get-AeUserHome)
-        if ($LASTEXITCODE -ne 0) {
+            --repo $root --home $homePath --user-home (Get-AeUserHome) --skip-windows-host-skills
+        $environmentStatus = $LASTEXITCODE
+        $hostSkillsCurrent = Test-AeWindowsHostSkillsState
+        if ($environmentStatus -ne 0 -or -not $hostSkillsCurrent) {
             Write-Error 'installed environment has missing, stale, modified, or host-conflicting targets' -ErrorAction Continue
             $errors++
         }
@@ -486,4 +519,4 @@ function Invoke-AeDoctor {
     if ($errors -gt 0 -or $warnings -gt 0) { throw 'Doctor found errors or warnings.' }
 }
 
-Export-ModuleMember -Function Get-AeRepoRoot, Get-AeUserHome, Get-AeAgentsHome, Install-AeComponents, Connect-AeHosts, Invoke-AeDoctor
+Export-ModuleMember -Function Get-AeRepoRoot, Get-AeUserHome, Get-AeAgentsHome, Install-AeComponents, Connect-AeHosts, Invoke-AeDoctor, Test-AeWindowsHostSkillsState

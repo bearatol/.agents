@@ -300,61 +300,6 @@ def powershell_hash_path(path):
     return hashlib.sha256("".join(records).encode()).hexdigest()
 
 
-def native_powershell_hash_path(path):
-    """Calculate a hash with the same PowerShell implementation as Windows setup."""
-    script = r'''
-$path = $env:AE_HASH_PATH
-$sha = [Security.Cryptography.SHA256]::Create()
-try {
-    if (-not (Test-Path -LiteralPath $path)) { exit 2 }
-    if (Test-Path -LiteralPath $path -PathType Leaf) {
-        $stream = [IO.File]::OpenRead($path)
-        try { [Console]::Out.WriteLine(([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()) }
-        finally { $stream.Dispose() }
-        exit 0
-    }
-    $root = [IO.Path]::GetFullPath($path).TrimEnd('\', '/')
-    $items = @(Get-ChildItem -LiteralPath $root -File -Recurse | Sort-Object FullName)
-    $builder = New-Object Text.StringBuilder
-    foreach ($item in $items) {
-        $relative = $item.FullName.Substring($root.Length).TrimStart('\', '/').Replace('\', '/')
-        $stream = [IO.File]::OpenRead($item.FullName)
-        try { $hash = ([BitConverter]::ToString($sha.ComputeHash($stream))).Replace('-', '').ToLowerInvariant() }
-        finally { $stream.Dispose() }
-        [void]$builder.Append($relative).Append([char]0).Append($hash).Append([char]10)
-    }
-    $bytes = [Text.Encoding]::UTF8.GetBytes($builder.ToString())
-    [Console]::Out.WriteLine(([BitConverter]::ToString($sha.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant())
-} finally {
-    $sha.Dispose()
-}
-'''
-    env = os.environ.copy()
-    env["AE_HASH_PATH"] = str(pathlib.Path(path))
-    try:
-        import ctypes
-
-        buffer = ctypes.create_unicode_buffer(32768)
-        length = ctypes.windll.kernel32.GetSystemDirectoryW(buffer, len(buffer))
-        executable = pathlib.Path(buffer.value) / "WindowsPowerShell" / "v1.0" / "powershell.exe"
-        if length == 0 or not executable.is_file():
-            return None
-        result = subprocess.run(
-            [str(executable), "-NoProfile", "-NonInteractive", "-Command", script],
-            text=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            env=env,
-            timeout=15,
-        )
-    except (AttributeError, OSError, subprocess.TimeoutExpired):
-        return None
-    if result.returncode == 0:
-        output = result.stdout.strip()
-        return output if re.fullmatch(r"[0-9a-f]{64}", output) else None
-    return None
-
-
 def environment_state(home):
     unix_path = home / ".ecosystem-state.json"
     if unix_path.is_file():
@@ -407,7 +352,7 @@ def resolved_child(path, root):
     return resolved_path
 
 
-def windows_skill_matches_installed(home, user_home, host, state_id, state_entry):
+def windows_skill_matches_installed(home, user_home, host, state_id):
     """Check a Windows-managed host skill against the installed skill copy."""
     parts = state_id.split(":", 3)
     if len(parts) != 4:
@@ -437,14 +382,12 @@ def windows_skill_matches_installed(home, user_home, host, state_id, state_entry
     ):
         return False
     try:
-        if os.name == "nt":
-            return native_powershell_hash_path(target) == state_entry.get("installed_hash")
         return powershell_hash_path(target) == powershell_hash_path(source)
     except OSError:
         return False
 
 
-def run_status(repo, home, user_home):
+def run_status(repo, home, user_home, *, skip_windows_host_skills=False):
     repo = pathlib.Path(repo)
     home = pathlib.Path(home)
     user_home = pathlib.Path(user_home)
@@ -505,6 +448,16 @@ def run_status(repo, home, user_home):
                     print(f"current        {state_id}")
             continue
         for state_id, entry in sorted(host_entries.items()):
+            parts = state_id.split(":", 3)
+            if (
+                skip_windows_host_skills
+                and entry.get("hash_kind") == "powershell"
+                and len(parts) == 4
+                and parts[1] in {"codex", "claude", "gemini"}
+                and parts[2] == "skill"
+                and NAME.fullmatch(parts[3])
+            ):
+                continue
             target = host_target(user_home, host, state_id)
             if target is None or (not target.exists() and not target.is_symlink()):
                 status = "host-conflicting"
@@ -517,7 +470,7 @@ def run_status(repo, home, user_home):
                         and parts[2] == "skill"
                     )
                     if is_windows_skill:
-                        status = "current" if windows_skill_matches_installed(home, user_home, host, state_id, entry) else "host-conflicting"
+                        status = "current" if windows_skill_matches_installed(home, user_home, host, state_id) else "host-conflicting"
                     else:
                         actual_hash = digest_path(target)
                         status = "current" if actual_hash == entry.get("installed_hash") else "host-conflicting"
@@ -537,6 +490,7 @@ def main():
     export_parser.add_argument("--home", required=True)
     export_parser.add_argument("--user-home", required=True)
     export_parser.add_argument("--output", required=True)
+    export_parser.add_argument("--skip-windows-host-skills", action="store_true", help=argparse.SUPPRESS)
 
     plan_parser = sub.add_parser("restore-plan")
     plan_parser.add_argument("--repo", required=True)
@@ -546,6 +500,7 @@ def main():
     status_parser.add_argument("--repo", required=True)
     status_parser.add_argument("--home", required=True)
     status_parser.add_argument("--user-home", required=True)
+    status_parser.add_argument("--skip-windows-host-skills", action="store_true", help=argparse.SUPPRESS)
 
     record_parser = sub.add_parser("record")
     record_parser.add_argument("--state", required=True)
@@ -560,7 +515,12 @@ def main():
             home = pathlib.Path(args.home)
             check_clean_worktree(repo)
             with contextlib.redirect_stdout(io.StringIO()):
-                status = run_status(repo, home, pathlib.Path(args.user_home))
+                status = run_status(
+                    repo,
+                    home,
+                    pathlib.Path(args.user_home),
+                    skip_windows_host_skills=args.skip_windows_host_skills,
+                )
             if status:
                 raise EnvironmentError("installed environment is not current; run status and resolve all drift")
             catalog = catalog_data(repo)
@@ -596,7 +556,12 @@ def main():
                 print(f"host\t{host}")
             return 0
         if args.command == "status":
-            return run_status(args.repo, args.home, args.user_home)
+            return run_status(
+                args.repo,
+                args.home,
+                args.user_home,
+                skip_windows_host_skills=args.skip_windows_host_skills,
+            )
         state_path = pathlib.Path(args.state)
         state = load_state(state_path)
         state.setdefault("components", {})[args.id] = {
