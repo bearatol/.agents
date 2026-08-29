@@ -446,7 +446,8 @@ function Test-AeWindowsHostSkillsState {
     if (-not (Test-Path -LiteralPath $skills -PathType Container) -or -not (Test-Path -LiteralPath $hostManifest -PathType Leaf)) {
         return $true
     }
-    foreach ($hostName in @(Get-Content -LiteralPath $hostManifest | Where-Object { $_ -in @('codex', 'claude', 'gemini') })) {
+    $configuredHosts = @(Get-Content -LiteralPath $hostManifest)
+    foreach ($hostName in @($configuredHosts | Where-Object { $_ -in @('codex', 'claude', 'gemini') })) {
         $paths = Get-AeHostPaths $hostName
         foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
             if (-not (Test-Path -LiteralPath (Join-Path $skill.FullName 'SKILL.md') -PathType Leaf)) { continue }
@@ -467,6 +468,26 @@ function Test-AeWindowsHostSkillsState {
                 Write-Error "host-conflicting $stateId" -ErrorAction Continue
                 $errors++
             }
+        }
+    }
+    if ($configuredHosts -contains 'sourcecraft') {
+        $stateId = 'host:sourcecraft:rule:agent-ecosystem'
+        $root = Get-AeRepoRoot
+        $source = Join-Path $root 'library/hosts/sourcecraft-global-rule.md'
+        $ruleRoot = Join-Path (Get-AeUserHome) '.codeassistant/rules'
+        $destination = Join-Path $ruleRoot 'agent-ecosystem.md'
+        try {
+            Assert-AeSafeDestination -Path $source -SafetyRoot $root
+            Assert-AeSafeDestination -Path $destination -SafetyRoot $ruleRoot
+            if ((Get-AePathHash $source) -ne (Get-AePathHash $destination)) {
+                Write-Error "host-conflicting $stateId" -ErrorAction Continue
+                $errors++
+            } else {
+                Write-Host "current        $stateId"
+            }
+        } catch {
+            Write-Error "host-conflicting $stateId" -ErrorAction Continue
+            $errors++
         }
     }
     return $errors -eq 0
