@@ -434,30 +434,38 @@ function Connect-AeHosts {
 
 function Test-AeWindowsHostSkillsState {
     $homePath = Get-AeAgentsHome
-    $state = Read-AeState (Join-Path $homePath '.ecosystem-state-windows.json')
+    $skills = Join-Path $homePath 'skills'
+    $hostManifest = Join-Path $homePath '.ecosystem-hosts'
     $errors = 0
-    foreach ($stateId in @($state.Keys | Where-Object { $_ -like 'host:*' } | Sort-Object)) {
-        $match = [regex]::Match($stateId, '^host:(codex|claude|gemini):skill:([a-z0-9][a-z0-9-]*)$')
-        if (-not $match.Success) { continue }
-        $hostName = $match.Groups[1].Value
-        $name = $match.Groups[2].Value
+    $statePath = Join-Path $homePath '.ecosystem-state-windows.json'
+    if ((Test-Path -LiteralPath $statePath -PathType Leaf) -and -not (Test-Path -LiteralPath $hostManifest -PathType Leaf)) {
+        Write-Error 'host-conflicting host:manifest-missing' -ErrorAction Continue
+        return $false
+    }
+    if (-not (Test-Path -LiteralPath $skills -PathType Container) -or -not (Test-Path -LiteralPath $hostManifest -PathType Leaf)) {
+        return $true
+    }
+    foreach ($hostName in @(Get-Content -LiteralPath $hostManifest | Where-Object { $_ -in @('codex', 'claude', 'gemini') })) {
         $paths = Get-AeHostPaths $hostName
-        $source = Join-Path $homePath "skills/$name"
-        $destination = Join-Path $paths.Skills $name
-        try {
-            Assert-AeSafeDestination -Path $source -SafetyRoot $homePath
-            Assert-AeSafeDestination -Path $destination -SafetyRoot $paths.Skills
-            $sourceHash = Get-AePathHash $source
-            $destinationHash = Get-AePathHash $destination
-            if ($null -eq $sourceHash -or $sourceHash -ne $destinationHash -or $destinationHash -ne $state[$stateId]) {
+        foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
+            if (-not (Test-Path -LiteralPath (Join-Path $skill.FullName 'SKILL.md') -PathType Leaf)) { continue }
+            $stateId = "host:$hostName:skill:$($skill.Name)"
+            $destination = Join-Path $paths.Skills $skill.Name
+            try {
+                Assert-AeSafeDestination -Path $skill.FullName -SafetyRoot $homePath
+                Assert-AeSafeDestination -Path $destination -SafetyRoot $paths.Skills
+                $sourceHash = Get-AePathHash $skill.FullName
+                $destinationHash = Get-AePathHash $destination
+                if ($null -eq $sourceHash -or $sourceHash -ne $destinationHash) {
+                    Write-Error "host-conflicting $stateId" -ErrorAction Continue
+                    $errors++
+                } else {
+                    Write-Host "current        $stateId"
+                }
+            } catch {
                 Write-Error "host-conflicting $stateId" -ErrorAction Continue
                 $errors++
-            } else {
-                Write-Host "current        $stateId"
             }
-        } catch {
-            Write-Error "host-conflicting $stateId" -ErrorAction Continue
-            $errors++
         }
     }
     return $errors -eq 0

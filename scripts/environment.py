@@ -429,6 +429,12 @@ def run_status(repo, home, user_home, *, skip_windows_host_skills=False):
             continue
         host_entries = {key: value for key, value in state_entries.items() if key.startswith(f"host:{host}:")}
         if not host_entries:
+            if (
+                skip_windows_host_skills
+                and host in {"codex", "claude", "gemini"}
+                and (home / ".ecosystem-state-windows.json").is_file()
+            ):
+                continue
             skills = home / "skills"
             for skill in sorted(skills.iterdir()) if skills.is_dir() else []:
                 if not (skill / "SKILL.md").is_file():
