@@ -425,8 +425,9 @@ function Connect-AeHosts {
         Write-AeState $state $statePath
         $hostManifest = Join-Path $homePath '.ecosystem-hosts'
         $oldHosts = if (Test-Path -LiteralPath $hostManifest) { @(Get-Content -LiteralPath $hostManifest) } else { @() }
+        $mergedHosts = @($oldHosts) + @($Hosts)
         Write-AeManagedLines -Path $hostManifest `
-            -Values @($oldHosts + $Hosts | Where-Object { $_ } | Sort-Object -Unique) `
+            -Values @($mergedHosts | Where-Object { $_ } | Sort-Object -Unique) `
             -SafetyRoot $homePath
     }
     if ($conflicts -gt 0) { throw "$conflicts host adapter conflict(s) require review." }

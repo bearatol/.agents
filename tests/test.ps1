@@ -61,6 +61,12 @@ try {
   if (-not (Test-Path -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts'))) {
     throw 'PowerShell install did not persist selected hosts.'
   }
+  $RecordedHosts = @(Get-Content -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts'))
+  foreach ($Host in @('generic', 'codex', 'claude', 'gemini', 'sourcecraft', 'koda')) {
+    if ($RecordedHosts -notcontains $Host) {
+      throw "PowerShell install did not record host: $Host"
+    }
+  }
   $PortableManifest = Join-Path $TestRoot 'environment.lock.json'
   & (Join-Path $RepoRoot 'scripts/agents.ps1') export $PortableManifest
   if ($LASTEXITCODE -or -not (Test-Path -LiteralPath $PortableManifest)) {
