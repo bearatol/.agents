@@ -21,8 +21,10 @@ try {
   & (Join-Path $RepoRoot 'scripts/doctor.ps1')
   if ($LASTEXITCODE) { throw 'PowerShell human-friendly setup failed doctor.' }
   Add-Content -LiteralPath (Join-Path $env:USERPROFILE '.codex/skills/software-delivery/SKILL.md') -Value 'host customization'
-  & (Join-Path $RepoRoot 'scripts/doctor.ps1')
-  if ($LASTEXITCODE -eq 0) { throw 'PowerShell doctor accepted a modified managed host skill.' }
+  $ModifiedHostCheck = Start-Process -FilePath 'pwsh' -NoNewWindow -Wait -PassThru -ArgumentList @(
+    '-NoProfile', '-File', (Join-Path $RepoRoot 'scripts/doctor.ps1')
+  )
+  if ($ModifiedHostCheck.ExitCode -eq 0) { throw 'PowerShell doctor accepted a modified managed host skill.' }
 
   $env:USERPROFILE = Join-Path $TestRoot 'all-user'
   $env:AGENTS_HOME = Join-Path $TestRoot 'all-agents'
