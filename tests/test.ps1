@@ -67,6 +67,19 @@ try {
       throw "PowerShell install did not record host: $ExpectedHost"
     }
   }
+  $ManagedState = Get-Content -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-state-windows.json') -Raw | ConvertFrom-Json
+  $ManagedIds = @($ManagedState.entries | ForEach-Object { $_.id })
+  foreach ($ExpectedId in @(
+    'host:codex:skill:software-delivery',
+    'host:codex:agent:ceo',
+    'host:claude:agent:ceo',
+    'host:gemini:agent:ceo',
+    'host:sourcecraft:agent:ceo'
+  )) {
+    if ($ManagedIds -notcontains $ExpectedId) {
+      throw "PowerShell install did not preserve the managed host identity: $ExpectedId"
+    }
+  }
   $PortableManifest = Join-Path $TestRoot 'environment.lock.json'
   & (Join-Path $RepoRoot 'scripts/agents.ps1') export $PortableManifest
   if ($LASTEXITCODE -or -not (Test-Path -LiteralPath $PortableManifest)) {

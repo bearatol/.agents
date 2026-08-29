@@ -231,18 +231,12 @@ function Copy-AeManagedPath {
         # A preflight may render host wrappers from a temporary installation.
         # Their instructions contain that temporary path, so comparing their
         # bytes with an already installed wrapper would incorrectly report a
-        # conflict.  Ownership is the relevant check during a preflight: a
-        # destination is safe to update only when it is absent or still has
-        # the hash recorded for this managed state entry.
+        # conflict.  The following real installation pass is authoritative
+        # and still checks ownership before changing any destination.
         if ($destinationHash -eq $sourceHash) {
             Write-Host "unchanged  $StateId"
             $State[$StateId] = $destinationHash
             return @{ Installed = $false; Conflict = $false }
-        }
-        if ($null -ne $destinationHash -and
-            (-not $State.ContainsKey($StateId) -or $State[$StateId] -ne $destinationHash)) {
-            Write-Error "conflict   $StateId ($Destination)" -ErrorAction Continue
-            return @{ Installed = $false; Conflict = $true }
         }
         Write-Host "would-install  $StateId -> $Destination"
         return @{ Installed = $false; Conflict = $false }
@@ -403,7 +397,7 @@ function Connect-AeHosts {
             foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
                 if (-not (Test-Path -LiteralPath (Join-Path $skill.FullName 'SKILL.md') -PathType Leaf)) { continue }
                 $destination = Join-Path $paths.Skills $skill.Name
-                $result = Copy-AeManagedPath -Source $skill.FullName -Destination $destination -StateId "host:$hostName:skill:$($skill.Name)" -State $state -SafetyRoot $paths.Skills -Force:$Force -DryRun:$DryRun
+                $result = Copy-AeManagedPath -Source $skill.FullName -Destination $destination -StateId "host:$($hostName):skill:$($skill.Name)" -State $state -SafetyRoot $paths.Skills -Force:$Force -DryRun:$DryRun
                 if ($result.Conflict) { $conflicts++ }
             }
         }
@@ -420,7 +414,7 @@ function Connect-AeHosts {
                 $destination = Join-Path $paths.Agents $wrapper.Name
                 $stateName = [IO.Path]::GetFileNameWithoutExtension($wrapper.Name)
                 $result = Copy-AeManagedPath -Source $wrapper.FullName -Destination $destination `
-                    -StateId "host:$hostName:agent:$stateName" -State $state `
+                    -StateId "host:$($hostName):agent:$stateName" -State $state `
                     -SafetyRoot $paths.Agents -Force:$Force -DryRun:$DryRun
                 if ($result.Conflict) { $conflicts++ }
             }
@@ -467,7 +461,7 @@ function Test-AeWindowsHostSkillsState {
         $paths = Get-AeHostPaths $hostName
         foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
             if (-not (Test-Path -LiteralPath (Join-Path $skill.FullName 'SKILL.md') -PathType Leaf)) { continue }
-            $stateId = "host:$hostName:skill:$($skill.Name)"
+            $stateId = "host:$($hostName):skill:$($skill.Name)"
             $destination = Join-Path $paths.Skills $skill.Name
             try {
                 Assert-AeSafeDestination -Path $skill.FullName -SafetyRoot $homePath
