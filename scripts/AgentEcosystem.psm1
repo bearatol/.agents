@@ -227,6 +227,26 @@ function Copy-AeManagedPath {
     Assert-AeSafeDestination -Path $Destination -SafetyRoot $SafetyRoot
     $sourceHash = Get-AePathHash $Source
     $destinationHash = Get-AePathHash $Destination
+    if ($DryRun) {
+        # A preflight may render host wrappers from a temporary installation.
+        # Their instructions contain that temporary path, so comparing their
+        # bytes with an already installed wrapper would incorrectly report a
+        # conflict.  Ownership is the relevant check during a preflight: a
+        # destination is safe to update only when it is absent or still has
+        # the hash recorded for this managed state entry.
+        if ($destinationHash -eq $sourceHash) {
+            Write-Host "unchanged  $StateId"
+            $State[$StateId] = $destinationHash
+            return @{ Installed = $false; Conflict = $false }
+        }
+        if ($null -ne $destinationHash -and
+            (-not $State.ContainsKey($StateId) -or $State[$StateId] -ne $destinationHash)) {
+            Write-Error "conflict   $StateId ($Destination)" -ErrorAction Continue
+            return @{ Installed = $false; Conflict = $true }
+        }
+        Write-Host "would-install  $StateId -> $Destination"
+        return @{ Installed = $false; Conflict = $false }
+    }
     if ($destinationHash -eq $sourceHash) {
         Write-Host "unchanged  $StateId"
         $State[$StateId] = $destinationHash
@@ -238,10 +258,6 @@ function Copy-AeManagedPath {
             return @{ Installed = $false; Conflict = $true }
         }
         Write-Host "updating   $StateId"
-    }
-    if ($DryRun) {
-        Write-Host "would-install  $StateId -> $Destination"
-        return @{ Installed = $false; Conflict = $false }
     }
     $parent = Split-Path -Parent $Destination
     Assert-AeSafeDestination -Path $Destination -SafetyRoot $SafetyRoot
