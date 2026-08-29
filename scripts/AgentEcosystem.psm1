@@ -162,7 +162,14 @@ function Read-AeState([string] $StatePath) {
     try {
         $data = Get-Content -LiteralPath $StatePath -Raw | ConvertFrom-Json
         foreach ($entry in @($data.entries)) {
-            if ($null -ne $entry -and $entry.id) { $state[[string]$entry.id] = [string]$entry.hash }
+            if ($null -eq $entry -or $entry.id -isnot [string] -or $entry.hash -isnot [string] -or
+                [string]::IsNullOrWhiteSpace($entry.id) -or [string]::IsNullOrWhiteSpace($entry.hash)) {
+                throw "Invalid ecosystem state entry in: $StatePath"
+            }
+            if ($state.ContainsKey([string]$entry.id)) {
+                throw "Duplicate ecosystem state entry: $($entry.id)"
+            }
+            $state[[string]$entry.id] = [string]$entry.hash
         }
     } catch {
         throw "Invalid ecosystem state file: $StatePath"
