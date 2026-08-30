@@ -158,6 +158,13 @@ for forbidden_term in core foundation --profile; do
     exit 1
   fi
 done
+if contains_literal 'Export portable configuration' "$ROOT/README.en.md"; then
+  printf 'English quick start uses unclear recovery terminology\n' >&2
+  exit 1
+fi
+contains_literal './scripts/agents.sh setup' "$ROOT/README.md"
+contains_literal 'installation receipt' "$ROOT/README.en.md"
+contains_literal 'Save an installation receipt' <("$ROOT/scripts/agents.sh" --help)
 
 ALL_DRY_RUN_HOME="$TEST_HOME/all-dry-run-agents"
 HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \

@@ -11,14 +11,20 @@ ROOT="$(repo_root)"
 DEST_HOME="$(agents_home)"
 
 usage() {
-  printf '%s\n' 'Usage: agents.sh setup [--work NAME ...] [--app NAME]'
-  printf '%s\n' '       agents.sh connect APP [APP ...]'
-  printf '%s\n' '       agents.sh library init|add|trust|activate|list|check ...'
-  printf '%s\n' '       agents.sh team init|task|result|review|decide|status ...'
-  printf '%s\n' '       agents.sh status'
-  printf '%s\n' '       agents.sh export OUTPUT.json'
-  printf '%s\n' '       agents.sh restore MANIFEST.json'
-  printf '%s\n' '       agents.sh doctor'
+  printf '%s\n' 'Start here:'
+  printf '%s\n' '  agents.sh setup [--work NAME ...] [--app NAME]'
+  printf '%s\n' '  Restart the selected AI application, then use it normally.'
+  printf '%s\n' ''
+  printf '%s\n' 'When needed:'
+  printf '%s\n' '  agents.sh connect APP [APP ...]                         Connect more AI tools'
+  printf '%s\n' '  agents.sh library init|add|trust|activate|list|check   Manage personal work'
+  printf '%s\n' '  agents.sh team init|task|result|review|decide|status   Coordinate AI tools'
+  printf '%s\n' '  agents.sh status                                       Check the installation'
+  printf '%s\n' '  agents.sh doctor                                       Run the full health check'
+  printf '%s\n' ''
+  printf '%s\n' 'Exact recovery (advanced):'
+  printf '%s\n' '  agents.sh export OUTPUT.json                           Save an installation receipt'
+  printf '%s\n' '  agents.sh restore RECEIPT.json                         Reproduce that installation'
 }
 
 [[ $# -gt 0 ]] || { usage; exit 1; }

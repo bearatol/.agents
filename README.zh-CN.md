@@ -7,13 +7,20 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>把 AI 工作成果保存在一个可迁移的位置，并让 Codex、Claude、Gemini、Kimi 等工具单独或协同使用。</strong></p>
+<p align="center"><strong>把任何 AI 工具连接到你的设置和工作成果，然后直接开始工作。</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` 是一个由 Git 管理的共享规则、skills、专业 agents、prompts、模型设置和团队任务仓库。AI 应用通过可替换的 adapters 连接，因此可以更换工具，也可以让多个工具同时协作。它不会静默覆盖已有的用户文件。
+`.agents` 是你的 AI 共享工作空间，用来保存规则、skills、prompts、专业 agents 和其他工作成果。它不是另一个模型，而是你的资料与 Codex、Claude、Gemini、Kimi 等 AI 工具之间的独立层。
 
-## 快速开始
+## 为什么需要它
+
+- 更换电脑、账号或 AI 工具时，工作成果仍然属于你；
+- Claude、Codex、Gemini、Kimi 可以使用同一套规则和 skills；
+- 一个 AI 执行，另一个 AI review，结果统一保存；
+- 未来出现新类型时，只需增加新文件夹。
+
+## 快速开始：三个步骤
 
 需要 Git 和 Python 3。macOS、Linux 或 WSL：
 
@@ -32,6 +39,12 @@ Set-Location .agents
 ```
 
 安装会询问您希望 AI 帮您做什么，以及您使用哪个 AI 应用。可同时选择多个方向，例如“代码和视频”；在修改任何内容前会给出清晰确认。
+
+安装完成后，重启所选 AI 工具，然后直接给出普通任务：
+
+> 检查这个项目中的错误，修改后展示测试结果。
+
+完成。日常使用不需要继续操作终端。
 
 ## 组合多个工作配置或全部安装
 
@@ -66,8 +79,8 @@ Windows：
 | --- | --- | --- |
 | 安装或扩展工作空间 | `./scripts/agents.sh setup` | `.\scripts\agents.ps1 setup` |
 | 查看当前状态 | `./scripts/agents.sh status` | `.\scripts\agents.ps1 status` |
-| 导出可迁移配置 | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
-| 在新电脑恢复 | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
+| 创建“精确安装清单”（可选） | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
+| 按清单恢复同一安装（可选） | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
 | 运行完整检查 | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
 
 把个人成果加入可迁移 library：
@@ -100,6 +113,8 @@ Windows：
 完整流程见 [个人 workspace 与 AI 团队](docs/WORKSPACE.md)。
 
 原有的 install、connect、update 和 list 脚本仍可用于自动化和高级控制。
+
+大多数用户不需要 `export`。它只创建一份很小的安装清单，记录选择了哪些功能、连接了哪些 AI 工具以及使用的 `.agents` 版本。它不包含 prompts、skills、项目、密码或个人文件；这些内容由 Git 保存和迁移。
 
 ## 第一个任务
 

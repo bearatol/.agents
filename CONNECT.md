@@ -37,16 +37,10 @@ macOS/Linux/WSL and PowerShell on native Windows.
 
 ## Human commands
 
-Use the human-friendly interface for normal work:
+Start here:
 
 ```bash
 ./scripts/agents.sh setup
-./scripts/agents.sh connect codex claude gemini kimi
-./scripts/agents.sh library list
-./scripts/agents.sh team status PROJECT
-./scripts/agents.sh status
-./scripts/agents.sh export ./agents.lock.json
-./scripts/agents.sh restore ./agents.lock.json
 ./scripts/agents.sh doctor
 ```
 
@@ -54,20 +48,24 @@ Native Windows:
 
 ```powershell
 .\scripts\agents.ps1 setup
-.\scripts\agents.ps1 connect -App codex,claude,gemini,kimi
-.\scripts\agents.ps1 library list
-.\scripts\agents.ps1 team status PROJECT
-.\scripts\agents.ps1 status
-.\scripts\agents.ps1 export .\agents.lock.json
-.\scripts\agents.ps1 restore .\agents.lock.json
 .\scripts\agents.ps1 doctor
 ```
 
-`setup` accepts one or more work areas and one or more AI applications. `status` reports installed and host
-drift. `export` refuses to overwrite an existing file. `restore` accepts only a
-strict portable manifest and requires the current trusted checkout to match its
-full commit SHA; it never fetches, changes Git state, deletes content, or enables
-forced overwrite.
+After setup, restart the selected AI application and use it normally. The
+terminal is not part of the daily workflow.
+
+Additional commands are available when needed:
+
+```bash
+./scripts/agents.sh connect codex claude gemini kimi  # connect more AI tools
+./scripts/agents.sh library list                       # inspect personal work
+./scripts/agents.sh team status PROJECT                # inspect shared AI work
+./scripts/agents.sh status                             # inspect installation
+```
+
+`export` and `restore` are advanced commands for reproducing an exact installed
+selection. They create and consume an installation receipt; they do not back up
+the personal library. Git moves personal files.
 
 The lower-level commands remain available for automation:
 

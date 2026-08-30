@@ -26,14 +26,20 @@ $AgentsHome = Get-AeAgentsHome
 $Python = Get-Command python3, python, py -ErrorAction SilentlyContinue | Select-Object -First 1
 
 function Show-Usage {
-    Write-Host 'Usage: agents.ps1 setup [-Work NAME ...] [-App NAME]'
-    Write-Host '       agents.ps1 connect -App NAME[,NAME]'
-    Write-Host '       agents.ps1 library init|add|trust|activate|list|check ...'
-    Write-Host '       agents.ps1 team init|task|result|review|decide|status ...'
-    Write-Host '       agents.ps1 status'
-    Write-Host '       agents.ps1 export OUTPUT.json'
-    Write-Host '       agents.ps1 restore MANIFEST.json'
-    Write-Host '       agents.ps1 doctor'
+    Write-Host 'Start here:'
+    Write-Host '  agents.ps1 setup [-Work NAME ...] [-App NAME]'
+    Write-Host '  Restart the selected AI application, then use it normally.'
+    Write-Host ''
+    Write-Host 'When needed:'
+    Write-Host '  agents.ps1 connect -App NAME[,NAME]                    Connect more AI tools'
+    Write-Host '  agents.ps1 library init|add|trust|activate|list|check  Manage personal work'
+    Write-Host '  agents.ps1 team init|task|result|review|decide|status  Coordinate AI tools'
+    Write-Host '  agents.ps1 status                                      Check the installation'
+    Write-Host '  agents.ps1 doctor                                      Run the full health check'
+    Write-Host ''
+    Write-Host 'Exact recovery (advanced):'
+    Write-Host '  agents.ps1 export OUTPUT.json                          Save an installation receipt'
+    Write-Host '  agents.ps1 restore RECEIPT.json                        Reproduce that installation'
 }
 
 try {

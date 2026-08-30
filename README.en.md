@@ -7,13 +7,27 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>Keep your AI work in one portable place. Use it from Codex, Claude, Gemini, Kimi, and other tools separately or together.</strong></p>
+<p align="center"><strong>Connect any AI tool to your settings and reusable work—then get to work.</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` is a Git-backed home for shared rules, skills, specialists, prompts, model settings, and team tasks. AI applications attach through replaceable adapters, so one tool can be replaced or several can work together. Existing user files are never silently overwritten.
+`.agents` is your shared workspace for AI. It keeps rules, skills, prompts, specialists, and other reusable work. Codex, Claude, Gemini, Kimi, and future tools can use the same workspace separately or together.
 
-## Quick start
+It is not another model. It is an independent layer between your work and AI tools: change computer, account, or provider without losing what you built.
+
+## Why use it
+
+| Situation | What `.agents` gives you |
+| --- | --- |
+| Claude is unavailable or out of quota | Connect Codex, Gemini, or Kimi and keep using the same skills and rules |
+| You bought a new computer | Clone your `.agents` repository, run setup, and rebuild the workspace |
+| One AI implements while another reviews better | Give them separate tasks and keep results and reviews together |
+| You collected useful prompts and processes | Keep them in your Git repository instead of one vendor account |
+| A new AI artifact appears tomorrow | Add a new folder type without migrating old data |
+
+## Quick start: three steps
+
+### 1. Install
 
 Git and Python 3 are required. On macOS, Linux, or WSL:
 
@@ -31,59 +45,77 @@ Set-Location .agents
 .\scripts\agents.ps1 setup
 ```
 
-Setup asks what you want help with and which AI application you use. You can choose several areas, such as code and video. It shows a plain-language confirmation before changing anything.
+Setup asks what you do and which AI applications you use. Select one or several choices, then confirm the change.
 
-## Combine work areas or install everything
+### 2. Restart the selected AI tool
 
-If you prefer not to answer questions, name the work directly. For example, code and video:
+The AI tool can now see the shared skills and settings that it supports.
 
-```bash
-./scripts/agents.sh setup --work code --work video --app codex
-```
+### 3. Give it a normal task
 
-On Windows:
+> Review this project for bugs. Start with a short plan, make the changes, and show the test results.
 
-```powershell
-.\scripts\agents.ps1 setup -Work code,video -App codex
-```
+Done. Normal daily work does not require more terminal commands.
 
-To install everything:
+## Connect everything at once
 
-```bash
-./scripts/agents.sh setup --work all --app codex
-```
-
-To let Codex, Claude, Gemini, and Kimi use the same workspace at once:
+Install every work area and connect several AI tools with one command:
 
 ```bash
 ./scripts/agents.sh setup --work all \
   --app codex --app claude --app gemini --app kimi
 ```
 
-On Windows, pass `-App codex,claude,gemini,kimi`.
+On Windows:
 
-## Main commands
+```powershell
+.\scripts\agents.ps1 setup -Work all -App codex,claude,gemini,kimi
+```
 
-| Goal | macOS / Linux / WSL | Windows |
-| --- | --- | --- |
-| Install or extend the workspace | `./scripts/agents.sh setup` | `.\scripts\agents.ps1 setup` |
-| Inspect the current state | `./scripts/agents.sh status` | `.\scripts\agents.ps1 status` |
-| Export portable configuration | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
-| Restore on a new computer | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
-| Run the complete health check | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+Connect another AI later without reinstalling everything:
 
-Add personal work to the portable library:
+```bash
+./scripts/agents.sh connect kimi
+```
+
+## What is stored
+
+Your `.agents` Git repository may contain rules, prompts, skills, specialists,
+model settings, connection descriptions, shared AI tasks, and future artifact
+types. Passwords, API keys, login sessions, installed applications, and model
+weights are deliberately excluded.
+
+## Save your own reusable work
+
+For a personal skill:
 
 ```bash
 ./scripts/agents.sh library add skill my-skill ./my-skill
-./scripts/agents.sh library list
 ./scripts/agents.sh library trust skill my-skill
 ./scripts/agents.sh library activate skill my-skill
 ./scripts/agents.sh connect codex claude gemini kimi
-./scripts/agents.sh library check
 ```
 
-The type may be `skill`, `rule`, `prompt`, `agent`, `mcp`, `model`, or a future name that does not exist yet. A new type is just a new folder. Imports remain inactive until reviewed and explicitly trusted. This version activates skills; other types are preserved safely until a matching adapter exists.
+The skill is stored first, reviewed and trusted explicitly, then activated for connected tools. You can already store `rule`, `prompt`, `agent`, `mcp`, `model`, or any future type; matching adapters can add activation later.
+
+## Move to a new computer
+
+If you did not add personal material, clone `.agents` again and run `setup`.
+
+For personal work, use your own private Git repository. On the new computer:
+
+```bash
+git clone YOUR_PRIVATE_REPOSITORY .agents
+cd .agents
+./scripts/agents.sh setup
+./scripts/agents.sh library check
+./scripts/agents.sh doctor
+```
+
+Git moves your files. Setup restores the shared environment and connections.
+This version requires each personal skill to be activated again with
+`library activate skill NAME`: instructions cloned from Git are never enabled
+without an explicit decision.
 
 ## Several AI hosts as one team
 
@@ -104,48 +136,32 @@ Shared settings stay in `.agents`, while each host writes a separate immutable r
 
 The neutral files under `workspace/projects/release/` can be read by any AI host and synchronized through Git. See the complete result, review, and decision flow in [personal workspace and AI teams](docs/WORKSPACE.md).
 
-The existing install, connect, update, and list scripts remain available for automation and advanced control.
+## What does `export` mean?
 
-## First useful request
+Most people do not need this command.
 
-Open or restart the selected AI host after setup, then give it a normal task:
+`export` creates a small receipt for reproducing the exact installation. It records the selected work areas, connected AI applications, and exact `.agents` version. It does **not** contain prompts, skills, projects, passwords, or personal files. Git moves those files.
 
-> Review this project for bugs. Start with a short plan, make only approved changes, and show the test evidence.
-
-For a multi-disciplinary task:
-
-> Run a complete product audit with the CEO. Use specialists only where they add concrete value and return evidence for every conclusion.
-
-## Move to a new computer
-
-On the old computer:
-
-Export from a trusted checkout with no uncommitted changes so its contents exactly match the commit recorded in the lock.
+Use it only when another computer must reproduce the same version and connections:
 
 ```bash
 ./scripts/agents.sh status
 ./scripts/agents.sh export ./agents.lock.json
 ```
 
-Copy `agents.lock.json`, clone the repository on the new computer, and independently review the full commit SHA recorded in the lock. Switch a clean checkout with no local changes to that reviewed commit, then run:
+The resulting `agents.lock.json` is that receipt. After cloning the same repository version on another computer:
 
 ```bash
 ./scripts/agents.sh restore ./agents.lock.json
 ./scripts/agents.sh doctor
 ```
 
-Restore never performs fetch, checkout, downgrade, deletion, or forced overwrite. It validates the lock and preflights destinations before persistent writes. See [portability and recovery](docs/PORTABILITY.md).
-
-| Moves | Does not move |
-| --- | --- |
-| Selected profiles and explicit components | Accounts and authentication |
-| Supported host connections | API keys and other secrets |
-| Exact repository commit and ecosystem version | AI applications and CLI packages |
-| Personal library and shared AI-team projects | Model weights, plugins, and unrelated dotfiles |
-
-The Git repository moves the personal library; the lock restores the installed environment and connections. Use your own private repository for personal material. Never store passwords, keys, or account sessions: automated checks help, but cannot replace reviewing the diff before a push.
+See [exact setup recovery](docs/PORTABILITY.md) for technical guarantees and limitations.
 
 ## Status vocabulary
+
+This section is only for troubleshooting. Normal daily work does not require
+checking `status`.
 
 - `current`: installed content matches its source;
 - `missing`: a managed target is absent;

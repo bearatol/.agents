@@ -1,4 +1,12 @@
-# Portability and recovery
+# Reproduce the same setup on another computer
+
+Most users do not need `export` or `restore`. Clone your repository on the new
+computer and run `setup` again.
+
+The commands in this document are for people who must reproduce the exact same
+`.agents` version, selected work areas, and AI connections. The exported
+`agents.lock.json` is an installation receipt. It is not a backup and contains
+none of the user's prompts, skills, projects, or files.
 
 `.agents` can reproduce its managed workspace on another computer. It is not a
 whole-machine backup and does not move accounts, credentials, applications,

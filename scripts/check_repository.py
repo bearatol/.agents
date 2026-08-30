@@ -9,6 +9,7 @@ import sys
 
 CYRILLIC = re.compile(r"[\u0400-\u04ff]")
 PERSONAL_PATH = re.compile(r"/(?:Users|home)/[^/\s]+")
+USER_FACING_NON_ENGLISH = {pathlib.Path("docs/HOW_IT_WORKS.md")}
 
 
 def repository_files(root):
@@ -37,7 +38,8 @@ def main():
             text = path.read_text(encoding="utf-8")
         except UnicodeDecodeError:
             continue
-        if path.name != "doctor.sh" and not path.name.startswith("README") and CYRILLIC.search(text):
+        if (path.name != "doctor.sh" and not path.name.startswith("README") and
+                relative not in USER_FACING_NON_ENGLISH and CYRILLIC.search(text)):
             errors.append(f"Cyrillic text in machine-facing file: {relative}")
         if path.name != "check_repository.py" and PERSONAL_PATH.search(text):
             errors.append(f"machine-specific home path in: {relative}")
