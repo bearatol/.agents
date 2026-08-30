@@ -22,6 +22,19 @@ rules, adapters, and optional local-model helpers.
 11. Review the final diff for secrets, personal paths, model weights, license
    violations, unsafe shell expansion, and unexpected network access.
 
+## User-facing writing
+
+Before writing or editing text meant for people — README files, documentation,
+guides, articles, release notes, website copy, and interface text — apply the
+`natural-writing` and `copy-editing` skills. For Russian text, also apply
+`humanizer-ru` or the closest available equivalent. Use this pass to remove
+template-like AI phrasing, bureaucracy, vague promises, and needless jargon.
+
+Keep the writer's intended voice and all verified facts. Do not manufacture
+personal anecdotes, certainty, or casualness just to make prose sound human.
+Machine-facing files, schemas, manifests, commands, and error messages are
+excluded unless they contain text shown directly to a person.
+
 ## Publication boundary
 
 Only original repository content may be committed. A third-party component
