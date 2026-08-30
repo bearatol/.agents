@@ -7,11 +7,11 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>把任何 AI 工具连接到你的设置和工作成果，然后直接开始工作。</strong></p>
+<p align="center"><strong>用任何 AI 工具继续使用同一套规则、skills 和工作成果。</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` 是你的 AI 共享工作空间，用来保存规则、skills、prompts、专业 agents 和其他工作成果。它不是另一个模型，而是你的资料与 Codex、Claude、Gemini、Kimi 等 AI 工具之间的独立层。
+`.agents` 是保存 AI 工作成果的共享工作空间。规则、skills、prompts、专业 agents 和其他资料都放在这里。它不是另一个模型，也不替代账号。更换电脑、账号或 AI 工具后，资料仍在你的 Git 仓库里。
 
 ## 为什么需要它
 

@@ -7,20 +7,24 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>Connect any AI tool to your settings and reusable work—then get to work.</strong></p>
+<p align="center"><strong>Use the same rules, skills, and work with any AI tool.</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` is your shared workspace for AI. It keeps rules, skills, prompts, specialists, and other reusable work. Codex, Claude, Gemini, Kimi, and future tools can use the same workspace separately or together.
+`.agents` is a workspace for your AI work. It keeps rules, skills, prompts,
+specialists, and other material you want to reuse. Codex, Claude, Gemini, Kimi,
+and other tools can use the same workspace, one at a time or together.
 
-It is not another model. It is an independent layer between your work and AI tools: change computer, account, or provider without losing what you built.
+It is not another model or account. Your material stays in your Git repository,
+separate from any one AI service. Change computers, accounts, or providers and
+keep what you built.
 
 ## Why use it
 
 | Situation | What `.agents` gives you |
 | --- | --- |
 | Claude is unavailable or out of quota | Connect Codex, Gemini, or Kimi and keep using the same skills and rules |
-| You bought a new computer | Clone your `.agents` repository, run setup, and rebuild the workspace |
+| You bought a new computer | Clone your `.agents` repository and run setup. Your workspace comes back |
 | One AI implements while another reviews better | Give them separate tasks and keep results and reviews together |
 | You collected useful prompts and processes | Keep them in your Git repository instead of one vendor account |
 | A new AI artifact appears tomorrow | Add a new folder type without migrating old data |
@@ -45,11 +49,12 @@ Set-Location .agents
 .\scripts\agents.ps1 setup
 ```
 
-Setup asks what you do and which AI applications you use. Select one or several choices, then confirm the change.
+Setup asks what you need help with and which AI applications you use. Choose one
+or more options, then review the change before it is made.
 
 ### 2. Restart the selected AI tool
 
-The AI tool can now see the shared skills and settings that it supports.
+The AI tool can now see the shared material it supports.
 
 ### 3. Give it a normal task
 
@@ -72,7 +77,7 @@ On Windows:
 .\scripts\agents.ps1 setup -Work all -App codex,claude,gemini,kimi
 ```
 
-Connect another AI later without reinstalling everything:
+Add another AI later without reinstalling everything:
 
 ```bash
 ./scripts/agents.sh connect kimi
@@ -80,10 +85,10 @@ Connect another AI later without reinstalling everything:
 
 ## What is stored
 
-Your `.agents` Git repository may contain rules, prompts, skills, specialists,
-model settings, connection descriptions, shared AI tasks, and future artifact
-types. Passwords, API keys, login sessions, installed applications, and model
-weights are deliberately excluded.
+Your `.agents` Git repository can contain rules, prompts, skills, specialists,
+model settings, connection descriptions, shared AI tasks, and new types of
+material. It does not contain passwords, API keys, login sessions, installed
+applications, or model weights. Keep those out of Git.
 
 ## Save your own reusable work
 
@@ -96,7 +101,10 @@ For a personal skill:
 ./scripts/agents.sh connect codex claude gemini kimi
 ```
 
-The skill is stored first, reviewed and trusted explicitly, then activated for connected tools. You can already store `rule`, `prompt`, `agent`, `mcp`, `model`, or any future type; matching adapters can add activation later.
+The skill is stored first. You review it, mark it as trusted, and then activate
+it for connected tools. This prevents instructions from Git from turning on by
+themselves. You can also store `rule`, `prompt`, `agent`, `mcp`, `model`, or a
+new type. An adapter can activate a type when it learns how to use it.
 
 ## Move to a new computer
 
@@ -112,14 +120,15 @@ cd .agents
 ./scripts/agents.sh doctor
 ```
 
-Git moves your files. Setup restores the shared environment and connections.
-This version requires each personal skill to be activated again with
-`library activate skill NAME`: instructions cloned from Git are never enabled
-without an explicit decision.
+Git brings back your files and setup reconnects the applications. Each personal
+skill must be activated again with `library activate skill NAME`. Instructions
+cloned from Git are never enabled without your decision.
 
 ## Several AI hosts as one team
 
-Shared settings stay in `.agents`, while each host writes a separate immutable result. For example, Claude can implement, Gemini and Kimi can review, and Codex can accept the outcome:
+Everyone uses the same `.agents`, but their answers do not overwrite one
+another. For example, Claude can implement, Gemini and Kimi can review, and
+Codex can accept the outcome:
 
 ```bash
 ./scripts/agents.sh team init release \
@@ -134,13 +143,18 @@ Shared settings stay in `.agents`, while each host writes a separate immutable r
 ./scripts/agents.sh team status release
 ```
 
-The neutral files under `workspace/projects/release/` can be read by any AI host and synchronized through Git. See the complete result, review, and decision flow in [personal workspace and AI teams](docs/WORKSPACE.md).
+The files under `workspace/projects/release/` can be read by any connected AI
+tool and synchronized through Git. See the full flow in [personal workspace and
+AI teams](docs/WORKSPACE.md).
 
 ## What does `export` mean?
 
 Most people do not need this command.
 
-`export` creates a small installation receipt for reproducing the exact setup. It records the selected work areas, connected AI applications, and exact `.agents` version. It does **not** contain prompts, skills, projects, passwords, or personal files. Git moves those files.
+`export` creates a small installation receipt. It records the selected work
+areas, connected AI applications, and exact `.agents` version. It does **not**
+contain prompts, skills, projects, passwords, or personal files. Git moves
+those files.
 
 Use it only when another computer must reproduce the same version and connections:
 
@@ -187,7 +201,10 @@ Shared safety rules, quality checks, and basic helpers are added automatically. 
 
 ## Trust boundary
 
-The lock contains only schema version, ecosystem version, full commit SHA, profiles, components, and hosts. It contains no paths, commands, URLs, environment variables, credentials, or file contents. Local modifications and unmanaged files are preserved; conflicts require an explicit decision.
+The lock contains only a schema version, ecosystem version, full commit SHA,
+profiles, components, and hosts. It contains no paths, commands, URLs,
+environment variables, credentials, or file contents. Local modifications and
+unmanaged files stay in place. A conflict requires your decision.
 
 Learn more: [personal workspace and AI teams](docs/WORKSPACE.md) · [hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [roadmap](docs/ROADMAP.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md).
 
