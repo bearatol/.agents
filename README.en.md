@@ -140,7 +140,7 @@ The neutral files under `workspace/projects/release/` can be read by any AI host
 
 Most people do not need this command.
 
-`export` creates a small receipt for reproducing the exact installation. It records the selected work areas, connected AI applications, and exact `.agents` version. It does **not** contain prompts, skills, projects, passwords, or personal files. Git moves those files.
+`export` creates a small installation receipt for reproducing the exact setup. It records the selected work areas, connected AI applications, and exact `.agents` version. It does **not** contain prompts, skills, projects, passwords, or personal files. Git moves those files.
 
 Use it only when another computer must reproduce the same version and connections:
 
