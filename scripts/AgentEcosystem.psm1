@@ -447,7 +447,7 @@ function Test-AeWindowsHostSkillsState {
     $homePath = Get-AeAgentsHome
     $skills = Join-Path $homePath 'skills'
     $hostManifest = Join-Path $homePath '.ecosystem-hosts'
-    $errors = 0
+    $hostConflictCount = 0
     $statePath = Join-Path $homePath '.ecosystem-state-windows.json'
     if ((Test-Path -LiteralPath $statePath -PathType Leaf) -and -not (Test-Path -LiteralPath $hostManifest -PathType Leaf)) {
         Write-Error 'host-conflicting host:manifest-missing' -ErrorAction Continue
@@ -471,13 +471,13 @@ function Test-AeWindowsHostSkillsState {
                 $destinationHash = Get-AePathHash $destination
                 if ($null -eq $sourceHash -or $sourceHash -ne $destinationHash) {
                     Write-Error "host-conflicting $stateId" -ErrorAction Continue
-                    $errors++
+                    $hostConflictCount++
                 } else {
                     Write-Host "current        $stateId"
                 }
             } catch {
                 Write-Error "host-conflicting $stateId" -ErrorAction Continue
-                $errors++
+                $hostConflictCount++
             }
         }
     }
@@ -492,7 +492,7 @@ function Test-AeWindowsHostSkillsState {
                 throw 'Python 3 and the team renderer are required to verify host agents.'
             }
             New-Item -ItemType Directory -Path $renderStage | Out-Null
-            & $python $team --home $homePath render-host --host $paths.Render --target $renderStage
+            & $python $team --home $homePath render-host --host $paths.Render --target $renderStage | Out-Null
             if ($LASTEXITCODE -ne 0) { throw "Failed to render $hostName agents." }
             foreach ($wrapper in @(Get-ChildItem -LiteralPath $renderStage -File)) {
                 $name = [IO.Path]::GetFileNameWithoutExtension($wrapper.Name)
@@ -503,18 +503,18 @@ function Test-AeWindowsHostSkillsState {
                     Assert-AeSafeDestination -Path $destination -SafetyRoot $paths.Agents
                     if ((Get-AePathHash $wrapper.FullName) -ne (Get-AePathHash $destination)) {
                         Write-Error "host-conflicting $stateId" -ErrorAction Continue
-                        $errors++
+                        $hostConflictCount++
                     } else {
                         Write-Host "current        $stateId"
                     }
                 } catch {
                     Write-Error "host-conflicting $stateId" -ErrorAction Continue
-                    $errors++
+                    $hostConflictCount++
                 }
             }
         } catch {
             Write-Error "host-conflicting host:$hostName:agents" -ErrorAction Continue
-            $errors++
+            $hostConflictCount++
         } finally {
             if (Test-Path -LiteralPath $renderStage) {
                 Remove-Item -LiteralPath $renderStage -Recurse -Force
@@ -526,7 +526,7 @@ function Test-AeWindowsHostSkillsState {
     })) {
         if (-not $expectedAgentIds.ContainsKey($stateId)) {
             Write-Error "host-conflicting $stateId" -ErrorAction Continue
-            $errors++
+            $hostConflictCount++
         }
     }
     if ($configuredHosts -contains 'sourcecraft') {
@@ -540,16 +540,16 @@ function Test-AeWindowsHostSkillsState {
             Assert-AeSafeDestination -Path $destination -SafetyRoot $ruleRoot
             if ((Get-AePathHash $source) -ne (Get-AePathHash $destination)) {
                 Write-Error "host-conflicting $stateId" -ErrorAction Continue
-                $errors++
+                $hostConflictCount++
             } else {
                 Write-Host "current        $stateId"
             }
         } catch {
             Write-Error "host-conflicting $stateId" -ErrorAction Continue
-            $errors++
+            $hostConflictCount++
         }
     }
-    return $errors -eq 0
+    return $hostConflictCount -eq 0
 }
 
 function Invoke-AeDoctor {
