@@ -457,6 +457,7 @@ function Test-AeWindowsHostSkillsState {
         return $true
     }
     $configuredHosts = @(Get-Content -LiteralPath $hostManifest)
+    $state = Read-AeState $statePath
     foreach ($hostName in @($configuredHosts | Where-Object { $_ -in @('codex', 'claude', 'gemini') })) {
         $paths = Get-AeHostPaths $hostName
         foreach ($skill in @(Get-ChildItem -LiteralPath $skills -Directory)) {
@@ -478,6 +479,54 @@ function Test-AeWindowsHostSkillsState {
                 Write-Error "host-conflicting $stateId" -ErrorAction Continue
                 $errors++
             }
+        }
+    }
+    $python = Get-AePython
+    $team = Join-Path $homePath 'tools/team/team.py'
+    $expectedAgentIds = @{}
+    foreach ($hostName in @($configuredHosts | Where-Object { $_ -in @('codex', 'claude', 'gemini', 'sourcecraft') })) {
+        $paths = Get-AeHostPaths $hostName
+        $renderStage = Join-Path ([IO.Path]::GetTempPath()) ('.ae-doctor-render-{0}' -f [Guid]::NewGuid().ToString('N'))
+        try {
+            if (-not $python -or -not (Test-Path -LiteralPath $team -PathType Leaf)) {
+                throw 'Python 3 and the team renderer are required to verify host agents.'
+            }
+            New-Item -ItemType Directory -Path $renderStage | Out-Null
+            & $python $team --home $homePath render-host --host $paths.Render --target $renderStage
+            if ($LASTEXITCODE -ne 0) { throw "Failed to render $hostName agents." }
+            foreach ($wrapper in @(Get-ChildItem -LiteralPath $renderStage -File)) {
+                $name = [IO.Path]::GetFileNameWithoutExtension($wrapper.Name)
+                $stateId = "host:$($hostName):agent:$name"
+                $expectedAgentIds[$stateId] = $true
+                $destination = Join-Path $paths.Agents $wrapper.Name
+                try {
+                    Assert-AeSafeDestination -Path $destination -SafetyRoot $paths.Agents
+                    if ((Get-AePathHash $wrapper.FullName) -ne (Get-AePathHash $destination)) {
+                        Write-Error "host-conflicting $stateId" -ErrorAction Continue
+                        $errors++
+                    } else {
+                        Write-Host "current        $stateId"
+                    }
+                } catch {
+                    Write-Error "host-conflicting $stateId" -ErrorAction Continue
+                    $errors++
+                }
+            }
+        } catch {
+            Write-Error "host-conflicting host:$hostName:agents" -ErrorAction Continue
+            $errors++
+        } finally {
+            if (Test-Path -LiteralPath $renderStage) {
+                Remove-Item -LiteralPath $renderStage -Recurse -Force
+            }
+        }
+    }
+    foreach ($stateId in @($state.Keys | Where-Object {
+        $_ -match '^host:(codex|claude|gemini|sourcecraft):agent:[a-z0-9-]+$'
+    })) {
+        if (-not $expectedAgentIds.ContainsKey($stateId)) {
+            Write-Error "host-conflicting $stateId" -ErrorAction Continue
+            $errors++
         }
     }
     if ($configuredHosts -contains 'sourcecraft') {

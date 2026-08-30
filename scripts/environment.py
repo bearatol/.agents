@@ -462,13 +462,15 @@ def run_status(repo, home, user_home, *, skip_windows_host_skills=False):
                 and (
                     (
                         parts[1] in {"codex", "claude", "gemini"}
-                        and parts[2] == "skill"
+                        and parts[2] in {"skill", "agent"}
                         and NAME.fullmatch(parts[3])
                     )
                     or (
                         parts[1] == "sourcecraft"
-                        and parts[2] == "rule"
-                        and parts[3] == "agent-ecosystem"
+                        and (
+                            (parts[2] == "agent" and NAME.fullmatch(parts[3]))
+                            or (parts[2] == "rule" and parts[3] == "agent-ecosystem")
+                        )
                     )
                 )
             ):

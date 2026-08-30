@@ -80,6 +80,22 @@ try {
       throw "PowerShell install did not preserve the managed host identity: $ExpectedId"
     }
   }
+  $StatePath = Join-Path $env:AGENTS_HOME '.ecosystem-state-windows.json'
+  $OriginalState = Get-Content -LiteralPath $StatePath -Raw
+  try {
+    $StaleState = $OriginalState | ConvertFrom-Json
+    $StaleState.entries = @($StaleState.entries) + [PSCustomObject]@{
+      id = 'host:codex:agent:retired-agent'
+      hash = 'stale-test-entry'
+    }
+    $StaleState | ConvertTo-Json -Depth 5 | Set-Content -LiteralPath $StatePath -Encoding UTF8
+    $StaleHostCheck = Start-Process -FilePath 'pwsh' -NoNewWindow -Wait -PassThru -ArgumentList @(
+      '-NoProfile', '-File', (Join-Path $RepoRoot 'scripts/doctor.ps1')
+    )
+    if ($StaleHostCheck.ExitCode -eq 0) { throw 'PowerShell doctor accepted a stale managed host agent.' }
+  } finally {
+    [IO.File]::WriteAllText($StatePath, $OriginalState, [Text.UTF8Encoding]::new($false))
+  }
   $PortableManifest = Join-Path $TestRoot 'environment.lock.json'
   & (Join-Path $RepoRoot 'scripts/agents.ps1') export $PortableManifest
   if ($LASTEXITCODE -or -not (Test-Path -LiteralPath $PortableManifest)) {
