@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true)]
-    [ValidateSet('codex', 'claude', 'gemini', 'koda', 'sourcecraft', 'generic')]
+    [ValidateSet('codex', 'claude', 'gemini', 'kimi', 'koda', 'sourcecraft', 'generic')]
     [string[]] $HostName,
     [switch] $Force
 )

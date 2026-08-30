@@ -2,11 +2,11 @@
 param(
   [ValidateSet('code','research','writing','design','video','complex','local-ai','all')]
   [string[]]$Work = @(),
-  [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+  [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
   [string[]]$App = @(),
   [string[]]$Profile = @(),
   [string[]]$Component = @(),
-  [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+  [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
   [string[]]$HostName = @(),
   [switch]$Force,
   [switch]$DryRun,
@@ -56,9 +56,9 @@ if ($Interactive) {
     if (-not $NumberMap.ContainsKey($_)) { throw "Unsupported choice: $_" }
     $NumberMap[$_]
   })
-  $AppChoice = Read-Host 'AI application (codex, claude, gemini, koda, sourcecraft, generic) [generic]'
+  $AppChoice = Read-Host 'AI application (codex, claude, gemini, kimi, koda, sourcecraft, generic) [generic]'
   if ([string]::IsNullOrWhiteSpace($AppChoice)) { $AppChoice = 'generic' }
-  if ($AppChoice -notin @('codex','claude','gemini','koda','sourcecraft','generic')) { throw "Unsupported AI application: $AppChoice" }
+  if ($AppChoice -notin @('codex','claude','gemini','kimi','koda','sourcecraft','generic')) { throw "Unsupported AI application: $AppChoice" }
   $App = @($AppChoice)
 }
 

@@ -1,5 +1,15 @@
 # CEO and Subagent Orchestration
 
+There are two compatible levels:
+
+- a host-native CEO uses the installed specialist wrappers below;
+- several independent AI applications exchange neutral records through
+  `scripts/agents.sh team` and `workspace/projects/`.
+
+The second level separates the specialist role from the vendor. Claude may act
+as the engineer, Gemini and Kimi as reviewers, and Codex as coordinator. See
+[personal workspace and AI teams](WORKSPACE.md) for the complete CLI flow.
+
 ## Inspect the available team
 
 ```bash

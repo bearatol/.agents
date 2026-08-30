@@ -1,7 +1,7 @@
 {
   "$schema": "./catalog.schema.json",
   "schema_version": 2,
-  "ecosystem_version": "0.5.0",
+  "ecosystem_version": "0.6.0",
   "language": "en",
   "license": "MIT",
   "components": [
@@ -19,8 +19,8 @@
     {"id":"agent:legal-content-reviewer","type":"agent","name":"legal-content-reviewer","description":"Reviews public claims, licensing, attribution, and compliance risk.","profile":["content"],"origin":"original","license":"MIT","path":"library/agents/legal-content-reviewer.md","tags":["legal","content","review"],"capabilities":["claims-review","license-review","compliance-triage"],"access":"read-only","skill_policy":"self-select","recommended_skills":["skill:copy-editing","skill:quality-review"],"delegates":false},
     {"id":"agent:sales","type":"agent","name":"sales","description":"Designs evidence-based offers, qualification, pipeline, and sales experiments.","profile":["marketing"],"origin":"original","license":"MIT","path":"library/agents/sales.md","tags":["sales","marketing"],"capabilities":["qualification","offer-design","pipeline-design","objection-handling"],"access":"read-only","skill_policy":"self-select","recommended_skills":["skill:offer-design","skill:positioning","skill:messaging"],"delegates":false},
     {"id":"agent:seo-researcher","type":"agent","name":"seo-researcher","description":"Reviews search demand, intent, information architecture, and technical SEO evidence.","profile":["marketing","content"],"origin":"original","license":"MIT","path":"library/agents/seo-researcher.md","tags":["seo","research","content"],"capabilities":["search-intent","content-opportunity","technical-seo-review","measurement"],"access":"read-only","skill_policy":"self-select","recommended_skills":["skill:market-research","skill:content-strategy","skill:quality-review"],"delegates":false},
-    {"id":"orchestration:protocols","type":"orchestration","name":"protocols","profile":["core"],"origin":"original","license":"MIT","path":"library/orchestration","tags":["coordination","contracts"]},
-    {"id":"tool:team","type":"tool","name":"team","profile":["core"],"origin":"original","license":"MIT","path":"library/tools/team","tags":["coordination","cli"]},
+    {"id":"orchestration:protocols","type":"orchestration","name":"protocols","profile":["core"],"origin":"original","license":"MIT","path":"library/orchestration","tags":["coordination","contracts","multi-host"]},
+    {"id":"tool:team","type":"tool","name":"team","profile":["core"],"origin":"original","license":"MIT","path":"library/tools/team","tags":["coordination","cli","multi-host"]},
     {"id":"skill:ceo","type":"skill","name":"ceo","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/ceo","tags":["coordination","governance"]},
     {"id":"skill:skill-router","type":"skill","name":"skill-router","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/skill-router","tags":["routing","discovery"]},
     {"id":"skill:find-skills","type":"skill","name":"find-skills","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/find-skills","tags":["discovery","provenance"]},

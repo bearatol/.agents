@@ -23,7 +23,7 @@ PRESERVE_AGENTS_FILE=0
 usage() {
   printf '%s\n' "Usage: $0 --profile NAME [--profile NAME ...] [options]"
   printf '%s\n' "       $0 --component KIND:NAME [--component KIND:NAME ...] [options]"
-  printf '%s\n' "Options: --host codex|claude|gemini|koda|sourcecraft|generic  --force  --dry-run"
+  printf '%s\n' "Options: --host codex|claude|gemini|kimi|koda|sourcecraft|generic  --force  --dry-run"
   printf '%s\n' "         --no-root-files  --preserve-agents-file"
 }
 

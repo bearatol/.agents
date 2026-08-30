@@ -388,6 +388,10 @@ function Connect-AeHosts {
             Write-Host "generic host: point the agent to $homePath/AGENTS.md and $homePath/CONNECT.md"
             continue
         }
+        if ($hostName -eq 'kimi') {
+            Write-Host "Kimi Code discovers skills directly from $homePath/skills"
+            continue
+        }
         if ($hostName -eq 'koda') {
             Write-Host "koda host: skills are discovered directly from $homePath/skills; run 'koda skills list' to verify"
             continue

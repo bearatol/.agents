@@ -22,7 +22,7 @@ while [[ $# -gt 0 ]]; do
     --host) [[ $# -ge 2 ]] || fail "--host requires a name"; HOSTS+=("$2"); shift 2 ;;
     --dry-run) DRY_RUN=1; shift ;;
     --source-home) [[ $# -ge 2 ]] || fail "--source-home requires a path"; SOURCE_HOME="$2"; shift 2 ;;
-    -h|--help) printf 'Usage: %s --host codex|claude|gemini|koda|sourcecraft|generic [--host ...]\n' "$0"; exit 0 ;;
+    -h|--help) printf 'Usage: %s --host codex|claude|gemini|kimi|koda|sourcecraft|generic [--host ...]\n' "$0"; exit 0 ;;
     *) fail "unknown argument: $1" ;;
   esac
 done
@@ -36,7 +36,7 @@ REQUIRES_FOUNDATION=0
 for host in "${HOSTS[@]}"; do
   case "$host" in
     codex|claude|gemini|sourcecraft) REQUIRES_FOUNDATION=1 ;;
-    koda|generic) ;;
+    kimi|koda|generic) ;;
     *) fail "unsupported host: $host" ;;
   esac
 done
@@ -140,7 +140,7 @@ for host in "${HOSTS[@]}"; do
       prepare_agents sourcecraft "$HOME/.config/opencode/agents"
       preflight_file "$ROOT/library/hosts/sourcecraft-global-rule.md" "$HOME/.codeassistant/rules/agent-ecosystem.md" 'host:sourcecraft:rule:agent-ecosystem'
       ;;
-    koda|generic) ;;
+    kimi|koda|generic) ;;
   esac
 done
 
@@ -208,6 +208,7 @@ for host in "${HOSTS[@]}"; do
     koda)
       if command -v koda >/dev/null 2>&1; then printf 'koda detected: skills are discovered directly from %s/skills\n' "$DEST_HOME"; else printf 'koda is not installed; see docs/HOSTS.md for installation instructions\n'; fi
       ;;
+    kimi) printf 'Kimi Code discovers skills directly from %s/skills\n' "$DEST_HOME" ;;
     generic) printf 'generic host: point the agent to %s/AGENTS.md and %s/CONNECT.md\n' "$DEST_HOME" "$DEST_HOME" ;;
   esac
 done

@@ -7,11 +7,11 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>只需配置一次 AI agent 工作空间，即可通过五个清晰的命令检查、迁移和恢复。</strong></p>
+<p align="center"><strong>把 AI 工作成果保存在一个可迁移的位置，并让 Codex、Claude、Gemini、Kimi 等工具单独或协同使用。</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` 管理共享规则、skills、专业 agents、工作配置和 Codex、Claude Code、Gemini CLI、Koda、SourceCraft 的连接。它不会静默覆盖已有的用户文件。
+`.agents` 是一个由 Git 管理的共享规则、skills、专业 agents、prompts、模型设置和团队任务仓库。AI 应用通过可替换的 adapters 连接，因此可以更换工具，也可以让多个工具同时协作。它不会静默覆盖已有的用户文件。
 
 ## 快速开始
 
@@ -53,7 +53,14 @@ Windows：
 ./scripts/agents.sh setup --work all --app codex
 ```
 
-## 五个主要命令
+让多个 AI 应用同时使用同一工作空间：
+
+```bash
+./scripts/agents.sh setup --work all \
+  --app codex --app claude --app gemini --app kimi
+```
+
+## 主要命令
 
 | 目标 | macOS / Linux / WSL | Windows |
 | --- | --- | --- |
@@ -62,6 +69,35 @@ Windows：
 | 导出可迁移配置 | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
 | 在新电脑恢复 | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
 | 运行完整检查 | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+
+把个人成果加入可迁移 library：
+
+```bash
+./scripts/agents.sh library add skill my-skill ./my-skill
+./scripts/agents.sh library trust skill my-skill
+./scripts/agents.sh library activate skill my-skill
+./scripts/agents.sh connect codex claude gemini kimi
+./scripts/agents.sh library check
+```
+
+类型可以是 `skill`、`rule`、`prompt`、`agent`、`mcp`、`model`，也可以是未来才出现的新名称。新类型只是一个新文件夹。导入内容默认不会启用，必须先检查并明确标记为可信。
+
+## 多个 AI 组成团队
+
+共享设置保存在 `.agents` 中，每个 AI 的结果和 review 都写入独立、不可覆盖的文件。例如 Claude 执行，Gemini 和 Kimi review，Codex 做最终决定：
+
+```bash
+./scripts/agents.sh team init release \
+  --objective "Prepare the release" --coordinator codex \
+  --member claude --member gemini --member kimi
+
+./scripts/agents.sh team task release implementation \
+  --title "Implement the change" --objective "Produce a verified result" \
+  --role engineer --worker claude --reviewer gemini --reviewer kimi \
+  --scope scripts --accept "All tests pass"
+```
+
+完整流程见 [个人 workspace 与 AI 团队](docs/WORKSPACE.md)。
 
 原有的 install、connect、update 和 list 脚本仍可用于自动化和高级控制。
 
@@ -100,9 +136,9 @@ Restore 不会自动执行 fetch、checkout、降级、删除或强制覆盖。�
 | 选定 profiles 和单独 components | 账号和身份验证 |
 | 支持的 host 连接 | API keys 和其他 secrets |
 | 精确 commit 和生态版本 | AI 应用和 CLI 软件包 |
-| 受管理的 rules、skills 和 agents | 模型权重、plugins 和无关 dotfiles |
+| 个人 library 和共享 AI 团队项目 | 模型权重、plugins 和无关 dotfiles |
 
-这不是整台电脑的备份，而是 `.agents` 受管理工作空间的恢复。
+Git 仓库迁移个人 library，lock 文件恢复已安装环境和连接。个人资料应放在自己的私有仓库中；不要保存密码、密钥或账号会话。
 
 ## 状态说明
 
@@ -132,6 +168,6 @@ Restore 不会自动执行 fetch、checkout、降级、删除或强制覆盖。�
 
 Lock 仅包含 schema version、ecosystem version、完整 commit SHA、profiles、components 和 hosts；不包含路径、命令、URL、环境变量、credentials 或文件内容。本地修改和非管理文件会被保留，冲突需要用户明确处理。
 
-更多信息：[hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [orchestration](docs/ORCHESTRATION.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md)。
+更多信息：[personal workspace](docs/WORKSPACE.md) · [hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [roadmap](docs/ROADMAP.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md)。
 
 本项目采用 [MIT License](LICENSE)。

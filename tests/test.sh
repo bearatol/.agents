@@ -7,10 +7,15 @@ set -o pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 TEST_HOME="$(mktemp -d)"
 PORTABILITY_PID=""
+WORKSPACE_PID=""
 cleanup() {
   if [[ -n "$PORTABILITY_PID" ]] && kill -0 "$PORTABILITY_PID" >/dev/null 2>&1; then
     kill "$PORTABILITY_PID" >/dev/null 2>&1 || true
     wait "$PORTABILITY_PID" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$WORKSPACE_PID" ]] && kill -0 "$WORKSPACE_PID" >/dev/null 2>&1; then
+    kill "$WORKSPACE_PID" >/dev/null 2>&1 || true
+    wait "$WORKSPACE_PID" >/dev/null 2>&1 || true
   fi
   rm -rf "$TEST_HOME"
 }
@@ -37,11 +42,21 @@ if [[ "${CI:-}" == true && "${SKIP_PORTABILITY:-0}" == 1 ]]; then
   printf 'CI must run portability tests\n' >&2
   exit 1
 fi
+if [[ "${CI:-}" == true && "${SKIP_WORKSPACE:-0}" == 1 ]]; then
+  printf 'CI must run personal workspace tests\n' >&2
+  exit 1
+fi
 
 if [[ "${SKIP_PORTABILITY:-0}" != 1 ]]; then
   python3 "$ROOT/tests/test_portability.py" > "$TEST_HOME/portability.log" 2>&1 &
   PORTABILITY_PID=$!
 fi
+
+if [[ "${SKIP_WORKSPACE:-0}" != 1 ]]; then
+  python3 "$ROOT/tests/test_workspace.py" > "$TEST_HOME/workspace.log" 2>&1 &
+  WORKSPACE_PID=$!
+fi
+"$ROOT/scripts/agents.sh" library check >/dev/null
 
 PREFLIGHT_AGENTS_HOME="$TEST_HOME/preflight-agents"
 PREFLIGHT_USER_HOME="$TEST_HOME/preflight-user"
@@ -77,11 +92,12 @@ grep -qx 'video' "$QUICK_START_AGENTS_HOME/.ecosystem-profiles"
 NONINTERACTIVE_AGENTS_HOME="$TEST_HOME/noninteractive-agents"
 NONINTERACTIVE_USER_HOME="$TEST_HOME/noninteractive-user"
 HOME="$NONINTERACTIVE_USER_HOME" AGENTS_HOME="$NONINTERACTIVE_AGENTS_HOME" \
-  /bin/bash "$ROOT/scripts/agents.sh" setup --work code --work video --app codex >/dev/null
+  /bin/bash "$ROOT/scripts/agents.sh" setup --work code --work video --app codex --app kimi >/dev/null
 grep -qx 'core' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'software' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
 grep -qx 'video' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-profiles"
 [[ -f "$NONINTERACTIVE_USER_HOME/.codex/agents/engineer.toml" ]]
+grep -qx 'kimi' "$NONINTERACTIVE_AGENTS_HOME/.ecosystem-hosts"
 
 BASH32_AGENTS_HOME="$TEST_HOME/bash32-profile-only-agents"
 BASH32_USER_HOME="$TEST_HOME/bash32-profile-only-user"
@@ -186,7 +202,7 @@ HOME="$TEST_HOME/all-dry-run-user" AGENTS_HOME="$ALL_DRY_RUN_HOME" \
 "$AGENTS_HOME/tools/team/team.sh" --home "$AGENTS_HOME" validate result \
   "$AGENTS_HOME/orchestration/templates/result.json"
 
-HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft --host koda >/dev/null
+HOME="$TEST_USER_HOME" "$ROOT/scripts/connect.sh" --host codex --host claude --host gemini --host sourcecraft --host kimi --host koda >/dev/null
 [[ -f "$TEST_USER_HOME/.codex/agents/ceo.toml" ]]
 [[ -f "$TEST_USER_HOME/.claude/agents/engineer.md" ]]
 [[ -f "$TEST_USER_HOME/.gemini/agents/marketer.md" ]]
@@ -196,6 +212,7 @@ grep -q 'skill-router' "$TEST_USER_HOME/.claude/agents/engineer.md"
 grep -q 'Independently select all relevant skills' "$TEST_USER_HOME/.gemini/agents/marketer.md"
 grep -q 'scan compact' "$TEST_USER_HOME/.codex/agents/engineer.toml"
 grep -q '^description: "' "$TEST_USER_HOME/.config/opencode/agents/seo-researcher.md"
+grep -qx 'kimi' "$AGENTS_HOME/.ecosystem-hosts"
 if grep -q 'Read the installed catalog' "$TEST_USER_HOME/.claude/agents/engineer.md"; then
   printf 'specialist wrapper unexpectedly preloads the full catalog\n' >&2
   exit 1
@@ -262,6 +279,16 @@ if [[ -n "$PORTABILITY_PID" ]]; then
   fi
   PORTABILITY_PID=""
   cat "$TEST_HOME/portability.log"
+fi
+
+if [[ -n "$WORKSPACE_PID" ]]; then
+  if ! wait "$WORKSPACE_PID"; then
+    WORKSPACE_PID=""
+    cat "$TEST_HOME/workspace.log" >&2
+    exit 1
+  fi
+  WORKSPACE_PID=""
+  cat "$TEST_HOME/workspace.log"
 fi
 
 printf 'All tests passed.\n'

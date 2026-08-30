@@ -12,6 +12,9 @@ DEST_HOME="$(agents_home)"
 
 usage() {
   printf '%s\n' 'Usage: agents.sh setup [--work NAME ...] [--app NAME]'
+  printf '%s\n' '       agents.sh connect APP [APP ...]'
+  printf '%s\n' '       agents.sh library init|add|trust|activate|list|check ...'
+  printf '%s\n' '       agents.sh team init|task|result|review|decide|status ...'
   printf '%s\n' '       agents.sh status'
   printf '%s\n' '       agents.sh export OUTPUT.json'
   printf '%s\n' '       agents.sh restore MANIFEST.json'
@@ -25,6 +28,15 @@ shift
 case "$command_name" in
   setup)
     exec "$SCRIPT_DIR/bootstrap.sh" "$@"
+    ;;
+  connect)
+    [[ $# -gt 0 ]] || fail 'usage: agents.sh connect APP [APP ...]'
+    connect_args=()
+    for app in "$@"; do connect_args+=(--host "$app"); done
+    exec "$SCRIPT_DIR/connect.sh" "${connect_args[@]}"
+    ;;
+  library|team)
+    exec python3 "$SCRIPT_DIR/workspace.py" --repo "$ROOT" --home "$DEST_HOME" "$command_name" "$@"
     ;;
   status)
     [[ $# -eq 0 ]] || fail 'status takes no arguments'

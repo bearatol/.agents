@@ -8,7 +8,7 @@ try {
   $env:USERPROFILE = Join-Path $TestRoot 'user'
   $env:AGENTS_HOME = Join-Path $TestRoot '.agents'
   New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
-  & (Join-Path $RepoRoot 'scripts/agents.ps1') setup -Work code,video -App codex
+  & (Join-Path $RepoRoot 'scripts/agents.ps1') setup -Work code,video -App codex,kimi
   if ($LASTEXITCODE) { throw 'PowerShell human-friendly multi-work setup failed.' }
   foreach ($Profile in @('core', 'software', 'video')) {
     if (-not (Select-String -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-profiles') -SimpleMatch $Profile -Quiet)) {
@@ -18,8 +18,13 @@ try {
   if (-not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE '.codex/agents/video-producer.toml'))) {
     throw 'PowerShell human-friendly setup did not connect Codex.'
   }
+  if (-not (Select-String -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts') -SimpleMatch kimi -Quiet)) {
+    throw 'PowerShell human-friendly setup did not record multiple AI applications.'
+  }
   & (Join-Path $RepoRoot 'scripts/doctor.ps1')
   if ($LASTEXITCODE) { throw 'PowerShell human-friendly setup failed doctor.' }
+  & (Join-Path $RepoRoot 'scripts/agents.ps1') library check
+  if ($LASTEXITCODE) { throw 'PowerShell personal workspace check failed.' }
   Add-Content -LiteralPath (Join-Path $env:USERPROFILE '.codex/skills/software-delivery/SKILL.md') -Value 'host customization'
   $ModifiedHostCheck = Start-Process -FilePath 'pwsh' -NoNewWindow -Wait -PassThru -ArgumentList @(
     '-NoProfile', '-File', (Join-Path $RepoRoot 'scripts/doctor.ps1')
@@ -45,7 +50,7 @@ try {
   )) {
     if (-not (Test-Path -LiteralPath (Join-Path $env:AGENTS_HOME $Path))) { throw "Missing installed path: $Path" }
   }
-  & (Join-Path $RepoRoot 'scripts/connect.ps1') -HostName codex,claude,gemini,sourcecraft,koda
+  & (Join-Path $RepoRoot 'scripts/connect.ps1') -HostName codex,claude,gemini,sourcecraft,kimi,koda
   if ($LASTEXITCODE) { throw 'PowerShell host connection failed' }
   foreach ($Path in @(
     '.codex/agents/ceo.toml',
@@ -62,7 +67,7 @@ try {
     throw 'PowerShell install did not persist selected hosts.'
   }
   $RecordedHosts = @(Get-Content -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts'))
-  foreach ($ExpectedHost in @('generic', 'codex', 'claude', 'gemini', 'sourcecraft', 'koda')) {
+  foreach ($ExpectedHost in @('generic', 'codex', 'claude', 'gemini', 'sourcecraft', 'kimi', 'koda')) {
     if ($RecordedHosts -notcontains $ExpectedHost) {
       throw "PowerShell install did not record host: $ExpectedHost"
     }

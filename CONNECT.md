@@ -9,7 +9,8 @@ macOS/Linux/WSL and PowerShell on native Windows.
 
 1. Query `catalog/catalog.json` metadata and the requested profile files; do not
    preload every full skill.
-2. Ask what kind of work the user does and which hosts they use.
+2. Ask what kind of work the user does and which hosts they use. Several hosts
+   may use the same environment simultaneously.
 3. Recommend the smallest sufficient set of profiles and components.
 4. Choose Bash or PowerShell for the current operating system and show the exact
    install command before running it.
@@ -36,10 +37,13 @@ macOS/Linux/WSL and PowerShell on native Windows.
 
 ## Human commands
 
-Use the five-command interface for normal work:
+Use the human-friendly interface for normal work:
 
 ```bash
 ./scripts/agents.sh setup
+./scripts/agents.sh connect codex claude gemini kimi
+./scripts/agents.sh library list
+./scripts/agents.sh team status PROJECT
 ./scripts/agents.sh status
 ./scripts/agents.sh export ./agents.lock.json
 ./scripts/agents.sh restore ./agents.lock.json
@@ -50,13 +54,16 @@ Native Windows:
 
 ```powershell
 .\scripts\agents.ps1 setup
+.\scripts\agents.ps1 connect -App codex,claude,gemini,kimi
+.\scripts\agents.ps1 library list
+.\scripts\agents.ps1 team status PROJECT
 .\scripts\agents.ps1 status
 .\scripts\agents.ps1 export .\agents.lock.json
 .\scripts\agents.ps1 restore .\agents.lock.json
 .\scripts\agents.ps1 doctor
 ```
 
-`setup` asks for one or more work areas and one AI application. `status` reports installed and host
+`setup` accepts one or more work areas and one or more AI applications. `status` reports installed and host
 drift. `export` refuses to overwrite an existing file. `restore` accepts only a
 strict portable manifest and requires the current trusted checkout to match its
 full commit SHA; it never fetches, changes Git state, deletes content, or enables
@@ -92,6 +99,7 @@ AGENTS_HOME=/tmp/.agents-test ./scripts/install.sh --profile core
 - `codex`: links installed skills into `~/.codex/skills`.
 - `claude`: links installed skills into `~/.claude/skills`.
 - `gemini`: links installed skills into `~/.gemini/skills`.
+- `kimi`: uses Kimi Code's native discovery of `~/.agents/skills`.
 - `koda`: uses Koda's native discovery of `~/.agents/skills`.
 - `sourcecraft`: uses native OpenCode skill discovery, renders OpenCode
   subagents, and adds a conflict-safe SourceCraft Code Assistant rule.
@@ -99,3 +107,5 @@ AGENTS_HOME=/tmp/.agents-test ./scripts/install.sh --profile core
 
 Adapters create managed skill links and host-native subagent wrappers. They do
 not overwrite a host's global instruction file or conflicting custom agent.
+The stable facade accepts only trusted built-in adapter IDs. Unknown names may
+be stored as neutral library data but never become executable adapter commands.

@@ -4,6 +4,11 @@
 whole-machine backup and does not move accounts, credentials, applications,
 plugins, model weights, or unrelated dotfiles.
 
+The repository itself also carries `workspace/library/` and
+`workspace/projects/`: personal reusable material and neutral collaboration
+history. Put personal work in a private repository. A public fork makes those
+files public as well.
+
 ## Export on the old computer
 
 First resolve any state reported by `status`. Use a trusted checkout with no
@@ -20,6 +25,9 @@ refuses a dirty checkout, any installed drift, and an existing output path. The
 JSON file contains exactly six fields: schema version, ecosystem version, full
 Git commit, selected profiles, explicit components, and hosts.
 
+The lock intentionally does not duplicate personal library content. Git moves
+that content; the lock reproduces the installed selection and adapter choices.
+
 ## Prepare the new computer
 
 Install Git, Python 3, and the AI host applications you intend to use. Clone the
@@ -34,6 +42,7 @@ With the reviewed commit already checked out:
 
 ```bash
 ./scripts/agents.sh restore ./agents.lock.json
+./scripts/agents.sh library check
 ./scripts/agents.sh doctor
 ```
 

@@ -16,7 +16,7 @@ usage() {
   printf '%s\n' 'Usage: agents.sh setup'
   printf '%s\n' '       agents.sh setup --work NAME [--work NAME ...] --app NAME'
   printf '%s\n' 'Work names: code, research, writing, design, video, complex, local-ai, all'
-  printf '%s\n' 'Apps: codex, claude, gemini, koda, sourcecraft, generic'
+  printf '%s\n' 'Apps: codex, claude, gemini, kimi, koda, sourcecraft, generic'
 }
 
 contains() {
@@ -37,7 +37,7 @@ add_profile() {
 add_host() {
   local host="$1"
   case "$host" in
-    codex|claude|gemini|koda|sourcecraft|generic) ;;
+    codex|claude|gemini|kimi|koda|sourcecraft|generic) ;;
     *) printf 'error: unsupported AI application: %s\n' "$host" >&2; exit 1 ;;
   esac
   if [[ ${#HOSTS[@]} -eq 0 ]] || ! contains "$host" "${HOSTS[@]}"; then
@@ -162,7 +162,7 @@ if [[ $interactive -eq 1 ]]; then
   IFS= read -r choices
   choices="${choices:-1}"
   add_interactive_choices "$choices"
-  printf 'AI application (codex, claude, gemini, koda, sourcecraft, generic) [generic]: '
+  printf 'AI application (codex, claude, gemini, kimi, koda, sourcecraft, generic) [generic]: '
   IFS= read -r app
   add_host "${app:-generic}"
 fi

@@ -1,15 +1,15 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $true, Position = 0)]
-    [ValidateSet('setup', 'status', 'export', 'restore', 'doctor', 'help')]
+    [ValidateSet('setup', 'connect', 'library', 'team', 'status', 'export', 'restore', 'doctor', 'help')]
     [string] $Command,
     [ValidateSet('code','research','writing','design','video','complex','local-ai','all')]
     [string[]] $Work = @(),
-    [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+    [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
     [string[]] $App = @(),
     [string[]] $Profile = @(),
     [string[]] $Component = @(),
-    [ValidateSet('codex','claude','gemini','koda','sourcecraft','generic')]
+    [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
     [string[]] $HostName = @(),
     [switch] $Force,
     [switch] $DryRun,
@@ -27,6 +27,9 @@ $Python = Get-Command python3, python, py -ErrorAction SilentlyContinue | Select
 
 function Show-Usage {
     Write-Host 'Usage: agents.ps1 setup [-Work NAME ...] [-App NAME]'
+    Write-Host '       agents.ps1 connect -App NAME[,NAME]'
+    Write-Host '       agents.ps1 library init|add|trust|activate|list|check ...'
+    Write-Host '       agents.ps1 team init|task|result|review|decide|status ...'
     Write-Host '       agents.ps1 status'
     Write-Host '       agents.ps1 export OUTPUT.json'
     Write-Host '       agents.ps1 restore MANIFEST.json'
@@ -46,6 +49,31 @@ try {
             if ($PreserveAgentsFile) { $BootstrapArguments.PreserveAgentsFile = $true }
             & (Join-Path $PSScriptRoot 'bootstrap.ps1') @BootstrapArguments
             if (-not $?) { exit 1 }
+        }
+        'connect' {
+            if ($Arguments.Count -ne 0 -or $App.Count -eq 0) { throw 'usage: agents.ps1 connect -App NAME[,NAME]' }
+            if ($Work.Count -ne 0 -or $Profile.Count -ne 0 -or $Component.Count -ne 0 -or $HostName.Count -ne 0 -or
+                $DryRun -or $NoRootFiles -or $PreserveAgentsFile) { throw 'connect accepts only -App and optional -Force' }
+            Connect-AeHosts -Hosts $App -Force:$Force -DryRun
+            Connect-AeHosts -Hosts $App -Force:$Force
+        }
+        'library' {
+            if (-not $Python) { throw 'Python 3 is required.' }
+            if ($Work.Count -ne 0 -or $App.Count -ne 0 -or $Profile.Count -ne 0 -or $Component.Count -ne 0 -or
+                $HostName.Count -ne 0 -or $Force -or $DryRun -or $NoRootFiles -or $PreserveAgentsFile) {
+                throw 'library accepts only its positional arguments'
+            }
+            & $Python.Source (Join-Path $PSScriptRoot 'workspace.py') --repo $RepoRoot --home $AgentsHome library @Arguments
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
+        }
+        'team' {
+            if (-not $Python) { throw 'Python 3 is required.' }
+            if ($Work.Count -ne 0 -or $App.Count -ne 0 -or $Profile.Count -ne 0 -or $Component.Count -ne 0 -or
+                $HostName.Count -ne 0 -or $Force -or $DryRun -or $NoRootFiles -or $PreserveAgentsFile) {
+                throw 'team accepts only its positional arguments'
+            }
+            & $Python.Source (Join-Path $PSScriptRoot 'workspace.py') --repo $RepoRoot --home $AgentsHome team @Arguments
+            if ($LASTEXITCODE) { exit $LASTEXITCODE }
         }
         'status' {
             if ($Arguments.Count -ne 0 -or $Work.Count -ne 0 -or $App.Count -ne 0 -or $Profile.Count -ne 0 -or

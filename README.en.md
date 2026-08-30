@@ -7,11 +7,11 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>Configure your AI-agent workspace once, then check, move, and restore it through five clear commands.</strong></p>
+<p align="center"><strong>Keep your AI work in one portable place. Use it from Codex, Claude, Gemini, Kimi, and other tools separately or together.</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` keeps shared rules, skills, specialists, work profiles, and connections for Codex, Claude Code, Gemini CLI, Koda, and SourceCraft. Existing user files are never silently overwritten.
+`.agents` is a Git-backed home for shared rules, skills, specialists, prompts, model settings, and team tasks. AI applications attach through replaceable adapters, so one tool can be replaced or several can work together. Existing user files are never silently overwritten.
 
 ## Quick start
 
@@ -53,7 +53,16 @@ To install everything:
 ./scripts/agents.sh setup --work all --app codex
 ```
 
-## Five commands
+To let Codex, Claude, Gemini, and Kimi use the same workspace at once:
+
+```bash
+./scripts/agents.sh setup --work all \
+  --app codex --app claude --app gemini --app kimi
+```
+
+On Windows, pass `-App codex,claude,gemini,kimi`.
+
+## Main commands
 
 | Goal | macOS / Linux / WSL | Windows |
 | --- | --- | --- |
@@ -62,6 +71,38 @@ To install everything:
 | Export portable configuration | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
 | Restore on a new computer | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
 | Run the complete health check | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+
+Add personal work to the portable library:
+
+```bash
+./scripts/agents.sh library add skill my-skill ./my-skill
+./scripts/agents.sh library list
+./scripts/agents.sh library trust skill my-skill
+./scripts/agents.sh library activate skill my-skill
+./scripts/agents.sh connect codex claude gemini kimi
+./scripts/agents.sh library check
+```
+
+The type may be `skill`, `rule`, `prompt`, `agent`, `mcp`, `model`, or a future name that does not exist yet. A new type is just a new folder. Imports remain inactive until reviewed and explicitly trusted. This version activates skills; other types are preserved safely until a matching adapter exists.
+
+## Several AI hosts as one team
+
+Shared settings stay in `.agents`, while each host writes a separate immutable result. For example, Claude can implement, Gemini and Kimi can review, and Codex can accept the outcome:
+
+```bash
+./scripts/agents.sh team init release \
+  --objective "Prepare the release" --coordinator codex \
+  --member claude --member gemini --member kimi
+
+./scripts/agents.sh team task release implementation \
+  --title "Implement the change" --objective "Produce a verified result" \
+  --role engineer --worker claude --reviewer gemini --reviewer kimi \
+  --scope scripts --accept "All tests pass"
+
+./scripts/agents.sh team status release
+```
+
+The neutral files under `workspace/projects/release/` can be read by any AI host and synchronized through Git. See the complete result, review, and decision flow in [personal workspace and AI teams](docs/WORKSPACE.md).
 
 The existing install, connect, update, and list scripts remain available for automation and advanced control.
 
@@ -100,9 +141,9 @@ Restore never performs fetch, checkout, downgrade, deletion, or forced overwrite
 | Selected profiles and explicit components | Accounts and authentication |
 | Supported host connections | API keys and other secrets |
 | Exact repository commit and ecosystem version | AI applications and CLI packages |
-| Managed rules, skills, and agents | Model weights, plugins, and unrelated dotfiles |
+| Personal library and shared AI-team projects | Model weights, plugins, and unrelated dotfiles |
 
-This restores the managed `.agents` workspace; it is not a whole-computer backup.
+The Git repository moves the personal library; the lock restores the installed environment and connections. Use your own private repository for personal material. Never store passwords, keys, or account sessions: automated checks help, but cannot replace reviewing the diff before a push.
 
 ## Status vocabulary
 
@@ -132,6 +173,6 @@ Shared safety rules, quality checks, and basic helpers are added automatically. 
 
 The lock contains only schema version, ecosystem version, full commit SHA, profiles, components, and hosts. It contains no paths, commands, URLs, environment variables, credentials, or file contents. Local modifications and unmanaged files are preserved; conflicts require an explicit decision.
 
-Learn more: [hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [orchestration](docs/ORCHESTRATION.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md).
+Learn more: [personal workspace and AI teams](docs/WORKSPACE.md) · [hosts](docs/HOSTS.md) · [architecture](docs/ARCHITECTURE.md) · [roadmap](docs/ROADMAP.md) · [security](SECURITY.md) · [contributing](CONTRIBUTING.md).
 
 Licensed under the [MIT License](LICENSE).

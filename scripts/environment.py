@@ -28,7 +28,7 @@ FIELDS = {
     "components",
     "hosts",
 }
-HOSTS = {"codex", "claude", "gemini", "koda", "sourcecraft", "generic"}
+HOSTS = {"codex", "claude", "gemini", "kimi", "koda", "sourcecraft", "generic"}
 NAME = re.compile(r"^[a-z0-9][a-z0-9-]*$")
 COMMIT = re.compile(r"^[0-9a-fA-F]{40}$")
 VERSION = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?$")
@@ -424,7 +424,7 @@ def run_status(repo, home, user_home, *, skip_windows_host_skills=False):
             print(f"host-conflicting host:{host}")
             unsafe = True
             continue
-        if host in {"generic", "koda"}:
+        if host in {"generic", "kimi", "koda"}:
             print(f"current        host:{host}")
             continue
         host_entries = {key: value for key, value in state_entries.items() if key.startswith(f"host:{host}:")}

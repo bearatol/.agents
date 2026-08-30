@@ -47,6 +47,20 @@ Use Node.js 20 or newer. On Windows, run the same npm command and
 not vendor its package because the npm package does not currently declare a
 redistribution license. See the [official npm page](https://www.npmjs.com/package/@kodadev/koda-cli).
 
+## Kimi Code CLI
+
+Kimi Code natively discovers user skills from `~/.agents/skills`, so the
+adapter does not duplicate them or invent a private format:
+
+```bash
+./scripts/agents.sh connect kimi
+kimi
+```
+
+Kimi can participate in neutral team projects under `workspace/projects/`
+without a Kimi-specific task format. Its documented skill locations include
+`~/.agents/skills`; see the official [Kimi Code skill documentation](https://www.kimi.com/code/docs/en/kimi-code-cli/customization/skills.html).
+
 ## Yandex SourceCraft
 
 SourceCraft CLI launches its bundled OpenCode agent. OpenCode natively discovers

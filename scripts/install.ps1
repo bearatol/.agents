@@ -2,7 +2,7 @@
 param(
     [string[]] $Profile = @(),
     [string[]] $Component = @(),
-    [ValidateSet('codex', 'claude', 'gemini', 'koda', 'sourcecraft', 'generic')]
+    [ValidateSet('codex', 'claude', 'gemini', 'kimi', 'koda', 'sourcecraft', 'generic')]
     [string[]] $HostName = @(),
     [switch] $Force,
     [switch] $DryRun,

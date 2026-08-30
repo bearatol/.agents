@@ -7,11 +7,11 @@
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-blue.svg"></a>
 </p>
 
-<p align="center"><strong>Настройте рабочую среду AI-агентов один раз — проверяйте, переносите и восстанавливайте её через пять понятных команд.</strong></p>
+<p align="center"><strong>Ваши наработки для нейросетей — в одном переносимом месте. Используйте их в Codex, Claude, Gemini, Kimi и других инструментах по отдельности или вместе.</strong></p>
 
 [Русский](README.md) · [English](README.en.md) · [简体中文](README.zh-CN.md)
 
-`.agents` хранит общие правила, skills, специалистов, рабочие профили и подключения к Codex, Claude Code, Gemini CLI, Koda и SourceCraft. Существующие пользовательские файлы не перезаписываются молча.
+`.agents` — это Git-хранилище общих правил, skills, специалистов, промтов, настроек моделей и совместных задач. AI-приложения подключаются к нему как сменные адаптеры: можно заменить один инструмент другим или поручить разную работу нескольким одновременно. Существующие пользовательские файлы не перезаписываются молча.
 
 ## Быстрый старт
 
@@ -53,7 +53,16 @@ Set-Location .agents
 ./scripts/agents.sh setup --work all --app codex
 ```
 
-## Пять основных команд
+Чтобы Codex, Claude, Gemini и Kimi одновременно использовали одну среду:
+
+```bash
+./scripts/agents.sh setup --work all \
+  --app codex --app claude --app gemini --app kimi
+```
+
+На Windows передайте список через запятую: `-App codex,claude,gemini,kimi`.
+
+## Основные команды
 
 | Задача | macOS / Linux / WSL | Windows |
 | --- | --- | --- |
@@ -62,6 +71,38 @@ Set-Location .agents
 | Сохранить переносимую конфигурацию | `./scripts/agents.sh export ./agents.lock.json` | `.\scripts\agents.ps1 export .\agents.lock.json` |
 | Восстановить её на новом компьютере | `./scripts/agents.sh restore ./agents.lock.json` | `.\scripts\agents.ps1 restore .\agents.lock.json` |
 | Полностью проверить установку | `./scripts/agents.sh doctor` | `.\scripts\agents.ps1 doctor` |
+
+Личные наработки добавляются в переносимую библиотеку:
+
+```bash
+./scripts/agents.sh library add skill my-skill ./my-skill
+./scripts/agents.sh library list
+./scripts/agents.sh library trust skill my-skill
+./scripts/agents.sh library activate skill my-skill
+./scripts/agents.sh connect codex claude gemini kimi
+./scripts/agents.sh library check
+```
+
+Вместо `skill` можно указать `rule`, `prompt`, `agent`, `mcp`, `model` или новое имя, которого сегодня ещё не существует. Новый тип — просто новая папка. Импорт не включается автоматически: сначала проверьте его, затем явно отметьте доверенным. В текущей версии `activate` публикует skills; остальные типы уже безопасно хранятся и ждут соответствующих адаптеров.
+
+## Несколько AI работают как команда
+
+Общие настройки лежат в `.agents`, а задания и ответы разных AI не перезаписывают друг друга. Например, Claude выполняет задачу, Gemini и Kimi проверяют, Codex принимает итог:
+
+```bash
+./scripts/agents.sh team init release \
+  --objective "Подготовить выпуск" --coordinator codex \
+  --member claude --member gemini --member kimi
+
+./scripts/agents.sh team task release implementation \
+  --title "Сделать изменение" --objective "Подготовить проверенный результат" \
+  --role engineer --worker claude --reviewer gemini --reviewer kimi \
+  --scope scripts --accept "Все тесты проходят"
+
+./scripts/agents.sh team status release
+```
+
+Файлы проекта находятся в `workspace/projects/release/`. Их можно читать из любого AI-приложения или синхронизировать через Git. Полный сценарий результата, проверок и принятия: [совместная работа](docs/WORKSPACE.md).
 
 Старые `install`, `connect`, `update` и `list` остаются доступны для автоматизации и точной настройки, но для обычной работы они не нужны.
 
@@ -100,9 +141,9 @@ Restore сам не выполняет `fetch`, `checkout`, downgrade или у�
 | Выбранные профили и отдельные компоненты | Аккаунты и авторизация |
 | Подключения к поддерживаемым хостам | API-ключи и другие секреты |
 | Точный commit и версия экосистемы | Сами AI-приложения и CLI-пакеты |
-| Управляемые rules, skills и agents | Веса моделей, плагины и посторонние dotfiles |
+| Общая личная библиотека и командные проекты | Веса моделей, плагины и посторонние dotfiles |
 
-Это перенос рабочей конфигурации `.agents`, а не резервная копия всего компьютера.
+Личная библиотека переносится самим Git-репозиторием; lock-файл восстанавливает установленную среду и подключения. Для личных материалов создайте свой приватный репозиторий. Никогда не сохраняйте в нём пароли, ключи и сессии: автоматическая проверка помогает, но не заменяет просмотр изменений перед push.
 
 ## Что означает status
 
@@ -132,6 +173,6 @@ Restore сам не выполняет `fetch`, `checkout`, downgrade или у�
 
 Lock-файл содержит только версию схемы, версию экосистемы, полный commit SHA, профили, компоненты и хосты. В нём нет путей, команд, URL, переменных окружения, credentials или содержимого файлов. Локальные изменения и неуправляемые файлы сохраняются; конфликт требует явного решения.
 
-Подробнее: [хосты](docs/HOSTS.md) · [архитектура](docs/ARCHITECTURE.md) · [оркестрация](docs/ORCHESTRATION.md) · [безопасность](SECURITY.md) · [вклад](CONTRIBUTING.md).
+Подробнее: [личная библиотека и команда AI](docs/WORKSPACE.md) · [хосты](docs/HOSTS.md) · [архитектура](docs/ARCHITECTURE.md) · [планы](docs/ROADMAP.md) · [безопасность](SECURITY.md) · [вклад](CONTRIBUTING.md).
 
 Проект распространяется под лицензией [MIT](LICENSE).
