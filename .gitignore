@@ -36,6 +36,7 @@ local-llm/
 /CATALOG.md
 /agents/
 /catalog.json
+/catalog.schema.json
 /local-models/
 /mcp/
 /migrations.json

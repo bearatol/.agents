@@ -61,6 +61,7 @@ Additional commands are available when needed:
 ./scripts/agents.sh library list                       # inspect personal work
 ./scripts/agents.sh team status PROJECT                # inspect shared AI work
 ./scripts/agents.sh status                             # inspect installation
+./scripts/agents.sh registry report                    # see who owns each path
 ```
 
 `export` and `restore` are advanced commands for reproducing an exact installed

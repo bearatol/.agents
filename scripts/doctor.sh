@@ -62,6 +62,7 @@ if [[ -f "$DEST_HOME/.ecosystem-installed" ]] && command -v python3 >/dev/null 2
   if ! python3 "$ROOT/scripts/environment.py" status \
     --repo "$ROOT" --home "$DEST_HOME" --user-home "$HOME"; then
     error "installed environment has missing, stale, modified, or host-conflicting targets"
+    printf 'HINT: run "agents.sh registry reconcile" to see who owns each diverged path\n' >&2
   fi
 fi
 

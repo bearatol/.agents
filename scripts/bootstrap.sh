@@ -45,6 +45,19 @@ add_host() {
   fi
 }
 
+add_host_list() {
+  local input="$1" item
+  local old_ifs="$IFS"
+  IFS=',' read -r -a host_items <<< "$input"
+  IFS="$old_ifs"
+  [[ ${#host_items[@]} -gt 0 ]] || { printf 'error: choose at least one AI application\n' >&2; exit 1; }
+  for item in "${host_items[@]}"; do
+    item="$(trim "$item")"
+    [[ -n "$item" ]] || { printf 'error: empty AI application choice\n' >&2; exit 1; }
+    add_host "$item"
+  done
+}
+
 add_selection_name() {
   local name="$1"
   if [[ ${#SELECTION_NAMES[@]} -eq 0 ]] || ! contains "$name" "${SELECTION_NAMES[@]}"; then
@@ -132,7 +145,7 @@ else
         add_work_list "$2"; shift 2 ;;
       --app|--host)
         [[ $# -ge 2 ]] || { printf 'error: %s requires a name\n' "$1" >&2; exit 1; }
-        add_host "$2"; shift 2 ;;
+        add_host_list "$2"; shift 2 ;;
       --profile)
         [[ $# -ge 2 ]] || { printf 'error: --profile requires a name\n' >&2; exit 1; }
         add_profile "$2"; shift 2 ;;
@@ -162,18 +175,20 @@ if [[ $interactive -eq 1 ]]; then
   IFS= read -r choices
   choices="${choices:-1}"
   add_interactive_choices "$choices"
-  printf 'AI application (codex, claude, gemini, kimi, koda, sourcecraft, generic) [generic]: '
+  printf 'AI applications, separated by commas (codex, claude, gemini, kimi, koda, sourcecraft, generic): '
   IFS= read -r app
-  add_host "${app:-generic}"
+  [[ -n "$(trim "$app")" ]] || { printf 'error: choose at least one AI application\n' >&2; exit 1; }
+  add_host_list "$app"
 fi
 
 [[ ${#PROFILES[@]} -gt 0 || ${#COMPONENTS[@]} -gt 0 ]] || {
   printf 'error: choose at least one work area\n' >&2
   exit 1
 }
-if [[ ${#HOSTS[@]} -eq 0 && ( $interactive -eq 1 || $human_work_selected -eq 1 ) ]]; then
-  add_host generic
-fi
+[[ ${#HOSTS[@]} -gt 0 || $human_work_selected -eq 0 ]] || {
+  printf 'error: choose at least one AI application; use generic only when you want the generic adapter\n' >&2
+  exit 1
+}
 add_profile core
 
 args=()
@@ -203,4 +218,14 @@ if [[ $interactive -eq 1 ]]; then
   [[ "$answer" == 'y' || "$answer" == 'Y' ]] || exit 0
 fi
 
-exec "$SCRIPT_DIR/install.sh" "${args[@]}"
+"$SCRIPT_DIR/install.sh" "${args[@]}"
+
+printf '\nSetup complete.\n'
+if [[ ${#SELECTION_NAMES[@]} -gt 0 ]]; then
+  printf 'Selected work: %s\n' "${SELECTION_NAMES[*]}"
+fi
+if [[ ${#HOSTS[@]} -gt 0 ]]; then
+  printf 'Connected AI applications: %s\n' "${HOSTS[*]}"
+  printf 'Next: restart or reopen the selected AI applications.\n'
+fi
+printf 'Verify: ./scripts/agents.sh doctor\n'

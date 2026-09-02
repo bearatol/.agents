@@ -2,6 +2,7 @@
   "schema_version": 1,
   "replacements": {
     "agent:design-master": "agent:design-reviewer",
-    "agent:team-lead": "agent:ceo"
+    "agent:team-lead": "agent:ceo",
+    "skill:find-skills": "skill:capability-discovery"
   }
 }

@@ -19,6 +19,7 @@ usage() {
   printf '%s\n' '  agents.sh connect APP [APP ...]                         Connect more AI tools'
   printf '%s\n' '  agents.sh library init|add|trust|activate|list|check   Manage personal work'
   printf '%s\n' '  agents.sh team init|task|result|review|decide|status   Coordinate AI tools'
+  printf '%s\n' '  agents.sh registry report|plan|reconcile               Explain who owns each path'
   printf '%s\n' '  agents.sh status                                       Check the installation'
   printf '%s\n' '  agents.sh doctor                                       Run the full health check'
   printf '%s\n' ''
@@ -43,6 +44,22 @@ case "$command_name" in
     ;;
   library|team)
     exec python3 "$SCRIPT_DIR/workspace.py" --repo "$ROOT" --home "$DEST_HOME" "$command_name" "$@"
+    ;;
+  registry)
+    [[ $# -gt 0 ]] || fail 'usage: agents.sh registry report|plan|reconcile'
+    case "$1" in
+      report|plan|reconcile) ;;
+      *) fail 'usage: agents.sh registry report|plan|reconcile' ;;
+    esac
+    for registry_argument in "$@"; do
+      case "$registry_argument" in
+        --repo|--home|--user-home|--repo=*|--home=*|--user-home=*)
+          fail 'registry paths come from the environment, not from arguments' ;;
+      esac
+    done
+    validate_agents_home "$DEST_HOME"
+    exec python3 "$SCRIPT_DIR/registry.py" \
+      --repo "$ROOT" --home "$DEST_HOME" --user-home "$HOME" "$@"
     ;;
   status)
     [[ $# -eq 0 ]] || fail 'status takes no arguments'

@@ -6,9 +6,15 @@ import os
 import pathlib
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 
+
+# Commands started here must not leave bytecode caches in the source tree;
+# installers copy component directories verbatim.
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 CLI = ROOT / "scripts" / "agents.sh"
@@ -336,11 +342,16 @@ class PortableWorkflowTests(unittest.TestCase):
 
     def test_status_and_doctor_detect_managed_root_drift(self):
         run(CLI, "setup", "--profile", "core", "--host", "generic", env=self.env)
-        with (self.home / "AGENTS.md").open("a", encoding="utf-8") as handle:
+        schema = self.home / "catalog.schema.json"
+        self.assertTrue(schema.is_file())
+        with schema.open("a", encoding="utf-8") as handle:
             handle.write("\nlocal change\n")
         status = run(CLI, "status", env=self.env, check=False)
         self.assertNotEqual(status.returncode, 0)
-        self.assertIn("locally-modified root:AGENTS.md", status.stdout)
+        self.assertIn("locally-modified root:catalog.schema.json", status.stdout)
+        reinstall = run(ROOT / "scripts" / "install.sh", "--profile", "core", env=self.env, check=False)
+        self.assertNotEqual(reinstall.returncode, 0)
+        self.assertIn("local change", schema.read_text(encoding="utf-8"))
         doctor = run(CLI, "doctor", env=self.env, check=False)
         self.assertNotEqual(doctor.returncode, 0)
 
@@ -534,6 +545,43 @@ class PortableWorkflowTests(unittest.TestCase):
         )
         self.assertNotEqual(dirty.returncode, 0)
         self.assertIn("clean reviewed checkout", dirty.stderr)
+
+
+class ManifestMigrationTests(unittest.TestCase):
+    """A retired component identifier must not linger in an installed manifest."""
+
+    def migrate(self, lines, check=True):
+        with tempfile.TemporaryDirectory(prefix="ae-manifest-") as temporary:
+            manifest = pathlib.Path(temporary) / ".ecosystem-installed"
+            manifest.write_text("".join(f"{line}\n" for line in lines), encoding="utf-8")
+            result = run(
+                "python3", ENVIRONMENT, "migrate-manifest",
+                "--repo", ROOT, "--manifest", manifest,
+                check=check,
+            )
+        return result
+
+    def test_renamed_component_is_replaced_by_its_current_identifier(self):
+        replacements = json.loads((ROOT / "catalog" / "migrations.json").read_text(encoding="utf-8"))["replacements"]
+        old_id, new_id = next(iter(replacements.items()))
+        output = self.migrate([old_id, "skill:ceo"]).stdout.split()
+        self.assertIn(new_id, output)
+        self.assertNotIn(old_id, output)
+
+    def test_unrelated_identifiers_keep_their_order(self):
+        output = self.migrate(["skill:ceo", "agent:engineer"]).stdout.split()
+        self.assertEqual(output, ["skill:ceo", "agent:engineer"])
+
+    def test_renaming_onto_an_installed_identifier_does_not_duplicate_it(self):
+        replacements = json.loads((ROOT / "catalog" / "migrations.json").read_text(encoding="utf-8"))["replacements"]
+        old_id, new_id = next(iter(replacements.items()))
+        output = self.migrate([old_id, new_id]).stdout.split()
+        self.assertEqual(output.count(new_id), 1)
+
+    def test_malformed_identifier_is_rejected(self):
+        result = self.migrate(["skill:../escape"], check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("invalid installed entry", result.stderr)
 
 
 if __name__ == "__main__":

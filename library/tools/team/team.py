@@ -10,6 +10,18 @@ from datetime import datetime, timezone
 
 
 ID_RE = re.compile(r"^[a-z]+:[a-z0-9-]+$")
+NAME_RE = re.compile(r"^[a-z0-9][a-z0-9-]*$")
+VERSION_RE = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$")
+CATALOG_SCHEMA_REFERENCE = "./catalog.schema.json"
+CATALOG_FIELDS = {"$schema", "schema_version", "ecosystem_version", "language", "license", "components"}
+COMPONENT_FIELDS = {
+    "id", "type", "name", "description", "profile", "origin", "license", "path", "tags",
+    "capabilities", "access", "skill_policy", "recommended_skills", "delegates",
+}
+COMPONENT_TYPES = {"skill", "agent", "rule", "model", "orchestration", "tool"}
+ORIGINS = {"original", "referenced", "vendored"}
+ACCESS_LEVELS = {"read-only", "workspace-write"}
+SKILL_POLICIES = {"self-select", "self-select-restricted"}
 
 
 def fail(message):
@@ -27,6 +39,15 @@ def catalog_path(home):
 
 def load_catalog(home):
     path = catalog_path(home)
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        fail(f"cannot read catalog: {exc}")
+    return data, path
+
+
+def load_canonical_catalog(repo_root):
+    path = pathlib.Path(repo_root).resolve() / "catalog" / "catalog.json"
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as exc:
@@ -54,36 +75,124 @@ def write_json(data, output):
         print(text, end="")
 
 
+def string_list(value, *, minimum=0):
+    return (
+        isinstance(value, list)
+        and len(value) >= minimum
+        and all(isinstance(item, str) for item in value)
+    )
+
+
 def validate_catalog(catalog, root=None):
     errors = []
-    if catalog.get("schema_version") != 2:
+    if not isinstance(catalog, dict):
+        return ["catalog must be an object"]
+    unknown_fields = set(catalog) - CATALOG_FIELDS
+    if unknown_fields:
+        errors.append("catalog has unexpected fields: " + ", ".join(sorted(unknown_fields)))
+    for field in ("schema_version", "ecosystem_version", "language", "license", "components"):
+        if field not in catalog:
+            errors.append(f"catalog missing {field}")
+    if catalog.get("$schema") != CATALOG_SCHEMA_REFERENCE:
+        errors.append(f"$schema must be {CATALOG_SCHEMA_REFERENCE}")
+    if type(catalog.get("schema_version")) is not int or catalog.get("schema_version") != 2:
         errors.append("schema_version must be 2")
+    if not isinstance(catalog.get("ecosystem_version"), str) or not VERSION_RE.fullmatch(catalog["ecosystem_version"]):
+        errors.append("ecosystem_version must be a semantic version")
+    if catalog.get("language") != "en":
+        errors.append("language must be en")
+    if not isinstance(catalog.get("license"), str):
+        errors.append("license must be a string")
     components = catalog.get("components")
     if not isinstance(components, list) or not components:
         errors.append("components must be a non-empty array")
         components = []
     seen = set()
-    ids = set()
-    for item in components:
-        component_id = item.get("id", "")
-        if not ID_RE.match(component_id):
-            errors.append(f"invalid component id: {component_id}")
+    component_by_id = {}
+    root_path = pathlib.Path(root).resolve() if root else None
+    for index, item in enumerate(components):
+        label = f"component[{index}]"
+        if not isinstance(item, dict):
+            errors.append(f"{label} must be an object")
+            continue
+        unknown_fields = set(item) - COMPONENT_FIELDS
+        if unknown_fields:
+            errors.append(f"{label} has unexpected fields: " + ", ".join(sorted(unknown_fields)))
+        for field in ("id", "type", "name", "profile", "origin", "license", "path", "tags"):
+            if field not in item:
+                errors.append(f"{label} missing {field}")
+        component_id = item.get("id")
+        if not isinstance(component_id, str) or not ID_RE.fullmatch(component_id):
+            errors.append(f"{label} has an invalid id")
+            component_id = None
         if component_id in seen:
             errors.append(f"duplicate component id: {component_id}")
-        seen.add(component_id)
-        ids.add(component_id)
-        if item.get("type") == "agent":
+        if component_id:
+            seen.add(component_id)
+            component_by_id[component_id] = item
+        component_type = item.get("type")
+        if not isinstance(component_type, str) or component_type not in COMPONENT_TYPES:
+            errors.append(f"{label} has an invalid type")
+        name = item.get("name")
+        if not isinstance(name, str) or not NAME_RE.fullmatch(name):
+            errors.append(f"{label} has an invalid name")
+        if component_id and isinstance(component_type, str) and isinstance(name, str):
+            if component_id != f"{component_type}:{name}":
+                errors.append(f"{label} id must match type and name")
+        if not string_list(item.get("profile"), minimum=1):
+            errors.append(f"{label} profile must be a non-empty string array")
+        origin = item.get("origin")
+        if not isinstance(origin, str) or origin not in ORIGINS:
+            errors.append(f"{label} has an invalid origin")
+        if not isinstance(item.get("license"), str):
+            errors.append(f"{label} license must be a string")
+        path = item.get("path")
+        if not isinstance(path, str) or not path:
+            errors.append(f"{label} path must be a non-empty string")
+        if not string_list(item.get("tags"), minimum=1):
+            errors.append(f"{label} tags must be a non-empty string array")
+        for field in ("description", "license", "path"):
+            if field in item and not isinstance(item[field], str):
+                errors.append(f"{label} {field} must be a string")
+        for field in ("capabilities", "recommended_skills"):
+            if field in item and not string_list(item[field]):
+                errors.append(f"{label} {field} must be a string array")
+        if "access" in item:
+            access = item["access"]
+            if not isinstance(access, str) or access not in ACCESS_LEVELS:
+                errors.append(f"{label} has an invalid access level")
+        if "skill_policy" in item:
+            skill_policy = item["skill_policy"]
+            if not isinstance(skill_policy, str) or skill_policy not in SKILL_POLICIES:
+                errors.append(f"{label} has an invalid skill policy")
+        if "delegates" in item and type(item["delegates"]) is not bool:
+            errors.append(f"{label} delegates must be a boolean")
+        if component_type == "agent":
             for field in ("description", "capabilities", "access", "skill_policy", "recommended_skills", "delegates"):
                 if field not in item:
-                    errors.append(f"{component_id} missing {field}")
-        if root:
-            source = root / item.get("path", "")
-            if not source.exists():
-                errors.append(f"{component_id} path does not exist: {source}")
+                    errors.append(f"{label} missing {field}")
+        if root_path and isinstance(path, str) and path:
+            source = (root_path / path).resolve()
+            try:
+                source.relative_to(root_path)
+            except ValueError:
+                errors.append(f"{label} path escapes repository root")
+            else:
+                if not source.exists():
+                    errors.append(f"{label} path does not exist: {source}")
     for item in components:
-        for skill in item.get("recommended_skills", []):
-            if skill not in ids:
-                errors.append(f"{item['id']} recommends missing {skill}")
+        if not isinstance(item, dict):
+            continue
+        component_id = item.get("id", "component")
+        skills = item.get("recommended_skills", [])
+        if not isinstance(skills, list):
+            continue
+        for skill in skills:
+            target = component_by_id.get(skill)
+            if target is None:
+                errors.append(f"{component_id} recommends missing {skill}")
+            elif target.get("type") != "skill":
+                errors.append(f"{component_id} recommends non-skill {skill}")
     return errors
 
 
@@ -412,7 +521,10 @@ def parser():
 def main():
     args = parser().parse_args()
     home = pathlib.Path(args.home).expanduser().resolve()
-    catalog, _ = load_catalog(home)
+    if args.command == "validate-catalog" and args.repo_root:
+        catalog, _ = load_canonical_catalog(args.repo_root)
+    else:
+        catalog, _ = load_catalog(home)
     errors = validate_catalog(catalog)
     if errors:
         fail("catalog invalid: " + "; ".join(errors))

@@ -23,7 +23,7 @@
     {"id":"tool:team","type":"tool","name":"team","profile":["core"],"origin":"original","license":"MIT","path":"library/tools/team","tags":["coordination","cli","multi-host"]},
     {"id":"skill:ceo","type":"skill","name":"ceo","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/ceo","tags":["coordination","governance"]},
     {"id":"skill:skill-router","type":"skill","name":"skill-router","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/skill-router","tags":["routing","discovery"]},
-    {"id":"skill:find-skills","type":"skill","name":"find-skills","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/find-skills","tags":["discovery","provenance"]},
+    {"id":"skill:capability-discovery","type":"skill","name":"capability-discovery","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/capability-discovery","tags":["discovery","provenance"]},
     {"id":"skill:skill-authoring","type":"skill","name":"skill-authoring","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/skill-authoring","tags":["skills","authoring"]},
     {"id":"skill:security-gate","type":"skill","name":"security-gate","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/security-gate","tags":["security","review","governance"]},
     {"id":"skill:natural-writing","type":"skill","name":"natural-writing","profile":["core"],"origin":"original","license":"MIT","path":"library/skills/natural-writing","tags":["writing","editing"]},

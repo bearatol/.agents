@@ -2,11 +2,9 @@
 param(
   [ValidateSet('code','research','writing','design','video','complex','local-ai','all')]
   [string[]]$Work = @(),
-  [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
   [string[]]$App = @(),
   [string[]]$Profile = @(),
   [string[]]$Component = @(),
-  [ValidateSet('codex','claude','gemini','kimi','koda','sourcecraft','generic')]
   [string[]]$HostName = @(),
   [switch]$Force,
   [switch]$DryRun,
@@ -18,6 +16,18 @@ $ErrorActionPreference = 'Stop'
 
 function Add-UniqueValue([System.Collections.Generic.List[string]]$Values, [string]$Value) {
   if (-not $Values.Contains($Value)) { [void]$Values.Add($Value) }
+}
+
+function Add-HostChoices([System.Collections.Generic.List[string]]$Hosts, [string[]]$Values) {
+  $AllowedHosts = @('codex','claude','gemini','kimi','koda','sourcecraft','generic')
+  foreach ($Value in $Values) {
+    foreach ($Host in $Value -split ',') {
+      $Name = $Host.Trim()
+      if ([string]::IsNullOrWhiteSpace($Name)) { throw 'Empty AI application choice.' }
+      if ($Name -notin $AllowedHosts) { throw "Unsupported AI application: $Name" }
+      Add-UniqueValue $Hosts $Name
+    }
+  }
 }
 
 function Resolve-WorkChoice([string]$Choice) {
@@ -56,9 +66,8 @@ if ($Interactive) {
     if (-not $NumberMap.ContainsKey($_)) { throw "Unsupported choice: $_" }
     $NumberMap[$_]
   })
-  $AppChoice = Read-Host 'AI application (codex, claude, gemini, kimi, koda, sourcecraft, generic) [generic]'
-  if ([string]::IsNullOrWhiteSpace($AppChoice)) { $AppChoice = 'generic' }
-  if ($AppChoice -notin @('codex','claude','gemini','kimi','koda','sourcecraft','generic')) { throw "Unsupported AI application: $AppChoice" }
+  $AppChoice = Read-Host 'AI applications, separated by commas (codex, claude, gemini, kimi, koda, sourcecraft, generic)'
+  if ([string]::IsNullOrWhiteSpace($AppChoice)) { throw 'Choose at least one AI application.' }
   $App = @($AppChoice)
 }
 
@@ -77,9 +86,11 @@ if ($Profiles.Count -eq 0 -and $Component.Count -eq 0) { throw 'Choose at least 
 Add-UniqueValue $Profiles 'core'
 
 $Hosts = New-Object 'System.Collections.Generic.List[string]'
-foreach ($Item in $HostName) { Add-UniqueValue $Hosts $Item }
-foreach ($Item in $App) { Add-UniqueValue $Hosts $Item }
-if ($Hosts.Count -eq 0 -and ($Interactive -or $Work.Count -gt 0)) { Add-UniqueValue $Hosts 'generic' }
+Add-HostChoices $Hosts $HostName
+Add-HostChoices $Hosts $App
+if ($Hosts.Count -eq 0 -and $Work.Count -gt 0) {
+  throw 'Choose at least one AI application. Use generic only when you want the generic adapter.'
+}
 
 if ($Interactive) {
   Write-Host ''
@@ -96,3 +107,12 @@ if ($NoRootFiles) { $InstallArguments.NoRootFiles = $true }
 if ($PreserveAgentsFile) { $InstallArguments.PreserveAgentsFile = $true }
 & (Join-Path $PSScriptRoot 'install.ps1') @InstallArguments
 if (-not $?) { exit 1 }
+
+Write-Host ''
+Write-Host 'Setup complete.'
+if ($SelectionNames.Count -gt 0) { Write-Host ("Selected work: {0}" -f ($SelectionNames -join ', ')) }
+if ($Hosts.Count -gt 0) {
+  Write-Host ("Connected AI applications: {0}" -f ($Hosts -join ', '))
+  Write-Host 'Next: restart or reopen the selected AI applications.'
+}
+Write-Host 'Verify: .\scripts\agents.ps1 doctor'

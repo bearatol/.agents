@@ -1,9 +1,9 @@
 ---
-name: find-skills
+name: capability-discovery
 description: Discover an installed, cataloged, or safely obtainable capability.
 ---
 
-# Find Skills
+# Capability Discovery
 
 Use when the requested capability is not already known.
 

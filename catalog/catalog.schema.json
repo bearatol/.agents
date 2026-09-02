@@ -3,9 +3,9 @@
   "$id": "https://github.com/bearatol/.agents/catalog.schema.json",
   "title": ".agents Catalog",
   "type": "object",
-  "required": ["schema_version", "ecosystem_version", "language", "license", "components"],
+  "required": ["$schema", "schema_version", "ecosystem_version", "language", "license", "components"],
   "properties": {
-    "$schema": {"type": "string"},
+    "$schema": {"const": "./catalog.schema.json"},
     "schema_version": {"const": 2},
     "ecosystem_version": {"type": "string", "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+$"},
     "language": {"const": "en"},

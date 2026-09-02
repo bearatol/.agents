@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+- Recorded the ownership model in
+  `docs/adr/0001-ownership-layers-and-activation-registry.md`: source, managed
+  runtime, and personal workspace, with one owner per activated path.
+- Added `agents.sh registry report|plan|reconcile`, a read-only view of who
+  owns each activated path, how far it was reviewed, and what an installation
+  would change. These commands never write.
+- Reported names claimed by both the catalog and a third-party lock file, and
+  activated paths that link outside the managed runtime.
+- Pointed a failing `doctor` at `registry reconcile` instead of leaving a bare
+  drift error.
+- Added regression coverage for attribution, planning, untrusted third-party
+  records, and the guarantee that no registry command writes.
+- Renamed this project's own `skill:find-skills` to `skill:capability-discovery`
+  and recorded the replacement, so the `find-skills` name belongs to the
+  third-party CLI wrapper alone and the collision cannot come back.
+- Made both installers read `catalog/migrations.json` when merging the
+  installed manifest, so a renamed component stops being reported as drift.
+- Stopped the test suites from leaving bytecode caches in the source tree,
+  which installers copied verbatim into the managed runtime.
+- Corrected the installer usage text: `--force` is accepted for compatibility
+  and never overwrites a conflicting path.
+- Ignored the generated runtime `catalog.schema.json` alongside the other
+  managed copies, so a development checkout cannot commit it as source.
+
 ## 0.5.0 - 2026-08-29
 
 - Reworked setup around plain-language work choices, including several choices

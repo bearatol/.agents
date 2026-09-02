@@ -23,7 +23,8 @@ PRESERVE_AGENTS_FILE=0
 usage() {
   printf '%s\n' "Usage: $0 --profile NAME [--profile NAME ...] [options]"
   printf '%s\n' "       $0 --component KIND:NAME [--component KIND:NAME ...] [options]"
-  printf '%s\n' "Options: --host codex|claude|gemini|kimi|koda|sourcecraft|generic  --force  --dry-run"
+  printf '%s\n' "Options: --host codex|claude|gemini|kimi|koda|sourcecraft|generic  --dry-run"
+  printf '%s\n' "--force is accepted for compatibility and never overwrites a conflicting path"
   printf '%s\n' "         --no-root-files  --preserve-agents-file"
 }
 
@@ -234,6 +235,7 @@ if [[ $ROOT_FILES -eq 1 ]]; then
     install_root_file "$ROOT/AGENTS.md" "$DEST_HOME/AGENTS.md"
   fi
   install_root_file "$ROOT/catalog/catalog.json" "$DEST_HOME/catalog.json"
+  install_root_file "$ROOT/catalog/catalog.schema.json" "$DEST_HOME/catalog.schema.json"
   install_root_file "$ROOT/catalog/migrations.json" "$DEST_HOME/migrations.json"
 fi
 
@@ -262,8 +264,12 @@ if [[ $DRY_RUN -eq 0 ]]; then
     mv "$staged_file" "$destination_file"
   }
 
+  # Apply canonical renames so a manifest never keeps pointing at a retired id.
   if [[ -f "$DEST_HOME/.ecosystem-installed" ]]; then
-    cat "$DEST_HOME/.ecosystem-installed" > "$TEMP_MERGED"
+    if ! python3 "$SCRIPT_DIR/environment.py" migrate-manifest \
+      --repo "$ROOT" --manifest "$DEST_HOME/.ecosystem-installed" > "$TEMP_MERGED"; then
+      fail 'cannot read the installed manifest; resolve it before installing again'
+    fi
   fi
   cat "$TEMP_INSTALLED" >> "$TEMP_MERGED"
   staged_installed="$(mktemp "$DEST_HOME/.ecosystem-installed.XXXXXX")"

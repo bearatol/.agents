@@ -96,6 +96,58 @@ def read_lines(path):
     return values
 
 
+MAX_MIGRATION_HOPS = 16
+COMPONENT_ID = re.compile(r"^[a-z]+:[a-z0-9][a-z0-9-]*$")
+
+
+def migration_map(repo):
+    """Read the canonical record of components that were renamed or merged."""
+    path = pathlib.Path(repo) / "catalog" / "migrations.json"
+    if not path.is_file():
+        return {}
+    data = read_json_file(path, limited=True, no_follow=True)
+    if not isinstance(data, dict):
+        raise EnvironmentError("invalid migration record")
+    replacements = data.get("replacements", {})
+    if not isinstance(replacements, dict) or len(replacements) > MAX_ITEMS:
+        raise EnvironmentError("invalid migration replacements")
+    mapping = {}
+    for old, new in replacements.items():
+        if not isinstance(old, str) or not isinstance(new, str):
+            raise EnvironmentError("migration entries must be strings")
+        if not COMPONENT_ID.fullmatch(old) or not COMPONENT_ID.fullmatch(new):
+            raise EnvironmentError(f"invalid migration entry: {old}")
+        mapping[old] = new
+    return mapping
+
+
+def migrate_component_id(component_id, mapping):
+    """Follow renames to the current identifier, refusing to loop forever."""
+    seen = {component_id}
+    for _ in range(MAX_MIGRATION_HOPS):
+        replacement = mapping.get(component_id)
+        if replacement is None:
+            return component_id
+        if replacement in seen:
+            raise EnvironmentError(f"migration record loops at {replacement}")
+        seen.add(replacement)
+        component_id = replacement
+    raise EnvironmentError("migration record is too deep")
+
+
+def migrate_manifest(repo, manifest):
+    """Return installed identifiers with renames applied, order preserved."""
+    mapping = migration_map(repo)
+    result = []
+    for component_id in read_lines(manifest):
+        if not COMPONENT_ID.fullmatch(component_id):
+            raise EnvironmentError(f"invalid installed entry: {component_id}")
+        current = migrate_component_id(component_id, mapping)
+        if current not in result:
+            result.append(current)
+    return result
+
+
 def validate_string_list(value, field, validator):
     if not isinstance(value, list) or len(value) > MAX_ITEMS:
         raise EnvironmentError(f"{field} must be an array with at most {MAX_ITEMS} items")
@@ -411,6 +463,7 @@ def run_status(repo, home, user_home, *, skip_windows_host_skills=False):
         "root:AGENTS.md": (repo / "AGENTS.md", home / "AGENTS.md"),
         "root:CONNECT.md": (repo / "CONNECT.md", home / "CONNECT.md"),
         "root:catalog.json": (repo / "catalog" / "catalog.json", home / "catalog.json"),
+        "root:catalog.schema.json": (repo / "catalog" / "catalog.schema.json", home / "catalog.schema.json"),
         "root:migrations.json": (repo / "catalog" / "migrations.json", home / "migrations.json"),
     }
     for state_id in sorted(key for key in state_entries if key.startswith("root:")):
@@ -519,6 +572,10 @@ def main():
     status_parser.add_argument("--user-home", required=True)
     status_parser.add_argument("--skip-windows-host-skills", action="store_true", help=argparse.SUPPRESS)
 
+    migrate_parser = sub.add_parser("migrate-manifest")
+    migrate_parser.add_argument("--repo", required=True)
+    migrate_parser.add_argument("--manifest", required=True)
+
     record_parser = sub.add_parser("record")
     record_parser.add_argument("--state", required=True)
     record_parser.add_argument("--id", required=True)
@@ -571,6 +628,10 @@ def main():
                 print(f"component\t{component}")
             for host in document["hosts"]:
                 print(f"host\t{host}")
+            return 0
+        if args.command == "migrate-manifest":
+            for component_id in migrate_manifest(args.repo, args.manifest):
+                print(component_id)
             return 0
         if args.command == "status":
             return run_status(

@@ -6,7 +6,7 @@ orchestration:protocols
 tool:team
 skill:ceo
 skill:skill-router
-skill:find-skills
+skill:capability-discovery
 skill:skill-authoring
 skill:security-gate
 skill:context-engineering

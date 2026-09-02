@@ -322,6 +322,7 @@ function Install-AeComponents {
         $roots = @(
             @{ Source = Join-Path $root 'CONNECT.md'; Destination = Join-Path $homePath 'CONNECT.md'; Id = 'root:CONNECT.md' },
             @{ Source = Join-Path $root 'catalog/catalog.json'; Destination = Join-Path $homePath 'catalog.json'; Id = 'root:catalog.json' },
+            @{ Source = Join-Path $root 'catalog/catalog.schema.json'; Destination = Join-Path $homePath 'catalog.schema.json'; Id = 'root:catalog.schema.json' },
             @{ Source = Join-Path $root 'catalog/migrations.json'; Destination = Join-Path $homePath 'migrations.json'; Id = 'root:migrations.json' }
         )
         if (-not $PreserveAgentsFile) {
@@ -336,7 +337,18 @@ function Install-AeComponents {
     if (-not $DryRun) {
         Write-AeState $state $statePath
         $manifest = Join-Path $homePath '.ecosystem-installed'
-        $old = if (Test-Path -LiteralPath $manifest) { @(Get-Content -LiteralPath $manifest) } else { @() }
+        # Apply canonical renames so a manifest never keeps pointing at a retired id.
+        $old = @()
+        if (Test-Path -LiteralPath $manifest) {
+            $migrator = Get-AePython
+            $environment = Join-Path $root 'scripts/environment.py'
+            if ($migrator -and (Test-Path -LiteralPath $environment -PathType Leaf)) {
+                $old = @(& $migrator $environment migrate-manifest --repo $root --manifest $manifest)
+                if ($LASTEXITCODE) { throw 'Cannot read the installed manifest; resolve it before installing again.' }
+            } else {
+                $old = @(Get-Content -LiteralPath $manifest)
+            }
+        }
         Write-AeManagedLines -Path $manifest `
             -Values @($old + $installed | Where-Object { $_ } | Sort-Object -Unique) -SafetyRoot $homePath
         $componentManifest = Join-Path $homePath '.ecosystem-components'

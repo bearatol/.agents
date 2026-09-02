@@ -22,16 +22,56 @@ Stable CLI facade
         host-specific execution
 ```
 
+## Three layers
+
+A normal installation keeps three ownership layers distinct:
+
+- **System source** is the versioned project checkout. `catalog/catalog.json`,
+  `catalog/catalog.schema.json`, `library/`, `profiles/`, and `scripts/` are
+  canonical here.
+- **Managed runtime** is `AGENTS_HOME`. Its top-level `skills/`, `agents/`,
+  `orchestration/`, `tools/`, `catalog.json`, and `catalog.schema.json` are
+  installed projections for hosts. Do not edit them directly; `status` and
+  `doctor` report drift so it can be reviewed before an update.
+- **Personal workspace** is `workspace/`. It contains user-owned reusable
+  material and neutral team records, and should be kept in private Git when it
+  contains private work.
+
+Developers may use the project checkout itself as `AGENTS_HOME`. In that mode
+the source and managed runtime share one directory, but their ownership remains
+the same: `library/` and `catalog/` are canonical, while the generated
+top-level runtime paths are ignored by Git.
+
+## Activation registry
+
+Hashes alone cannot say who is entitled to write a path, so a runtime that
+several tools install into ends up with drift nobody can safely resolve. The
+activation registry attributes every activated path to one owner, using records
+that already exist: the canonical catalog, the personal workspace index, and
+third-party lock files found inside `AGENTS_HOME`. Anything no record claims
+stays `unknown` and untouched.
+
+`scripts/registry.py` derives the registry on every run and writes nothing.
+Its three commands are read operations. `report` lists ownership, trust, and
+state. `plan` shows what an installation would change. `reconcile` shows the
+paths that need a human decision, including names claimed by two records and
+links that leave the runtime. Reasoning and trade-offs are recorded in
+`docs/adr/0001-ownership-layers-and-activation-registry.md`.
+
 ## Sources of truth
 
 - `catalog/catalog.json` describes every component, agent capability, access
-  level, skill policy, and advisory skill set.
+  level, skill policy, and advisory skill set. Its local
+  `catalog/catalog.schema.json` constrains the catalog structure.
 - `library/agents/` contains vendor-neutral canonical specialist prompts.
 - `library/skills/` contains reusable methods loaded by CEO and subagents.
 - `library/orchestration/` defines task, result, and state contracts.
 - `profiles/` groups components for selective installation.
 - `.ecosystem-profiles`, `.ecosystem-components`, and `.ecosystem-hosts` record
   the logical selection on one machine; they never contain credentials.
+- The runtime `catalog.json` and sibling `catalog.schema.json` are managed
+  copies for installed tools. Repository checks always use the canonical pair
+  under `catalog/`.
 - A user-exported environment lock is the portable, versioned description of
   that selection: schema version, ecosystem version, full commit SHA, profiles,
   explicit components, and hosts.

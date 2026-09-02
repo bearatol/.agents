@@ -50,17 +50,31 @@ Set-Location .agents
 ```
 
 Setup asks what you need help with and which AI applications you use. Choose one
-or more options, then review the change before it is made.
+or more options, enter several applications with commas, then review the change
+before it is made. Select `generic` only for a tool without its own adapter.
 
-### 2. Restart the selected AI tool
+### 2. Verify the installation
+
+```bash
+./scripts/agents.sh doctor
+```
+
+On Windows:
+
+```powershell
+.\scripts\agents.ps1 doctor
+```
+
+`doctor` checks the installed environment and host connections. Resolve any
+conflict or modified-file report before continuing.
+
+### 3. Restart the selected AI tool and give it a normal task
 
 The AI tool can now see the shared material it supports.
 
-### 3. Give it a normal task
-
 > Review this project for bugs. Start with a short plan, make the changes, and show the test results.
 
-Done. Normal daily work does not require more terminal commands.
+After that check, normal daily work does not require more terminal commands.
 
 ## Connect everything at once
 

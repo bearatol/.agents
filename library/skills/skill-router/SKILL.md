@@ -13,7 +13,8 @@ Use at the start of a task when several ecosystem capabilities may apply.
 4. Rank skills by material contribution and remove redundant workflows.
 5. Select every useful skill that fits the task scope, context, and permissions.
 6. Load each selected `SKILL.md` completely before applying it.
-7. If a capability is missing, use `find-skills`; do not pretend it exists.
+7. If a capability is missing, use `capability-discovery`; do not pretend it
+   exists.
 8. Record considered, applied, omitted, and missing skills in the result.
 
 For a subagent, selection is autonomous: do not ask the CEO or user to approve
