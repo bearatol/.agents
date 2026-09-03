@@ -60,6 +60,7 @@ if [[ "${SKIP_WORKSPACE:-0}" != 1 ]]; then
 fi
 python3 "$ROOT/tests/test_catalog_validation.py"
 python3 "$ROOT/tests/test_registry.py"
+python3 "$ROOT/tests/test_lifecycle.py"
 "$ROOT/scripts/agents.sh" library check >/dev/null
 
 PREFLIGHT_AGENTS_HOME="$TEST_HOME/preflight-agents"
@@ -198,6 +199,35 @@ REGISTRY_BEFORE="$(python3 "$ROOT/scripts/state.py" hash "$AGENTS_HOME")"
 contains_literal 'skill:natural-writing' <("$ROOT/scripts/agents.sh" registry report)
 contains_literal 'wrote nothing' <("$ROOT/scripts/agents.sh" registry plan)
 [[ "$(python3 "$ROOT/scripts/state.py" hash "$AGENTS_HOME")" == "$REGISTRY_BEFORE" ]]
+
+# disable withdraws a component and enable puts it back.
+"$ROOT/scripts/agents.sh" disable skill:natural-writing >/dev/null
+[[ ! -e "$AGENTS_HOME/skills/natural-writing" ]]
+[[ -f "$AGENTS_HOME/.disabled/skills/natural-writing/SKILL.md" ]]
+contains_literal 'disabled' <("$ROOT/scripts/agents.sh" registry report)
+"$ROOT/scripts/agents.sh" enable skill:natural-writing >/dev/null
+[[ -f "$AGENTS_HOME/skills/natural-writing/SKILL.md" ]]
+[[ ! -e "$AGENTS_HOME/.disabled/skills/natural-writing" ]]
+
+# removal refuses anything this project does not own.
+mkdir -p "$AGENTS_HOME/skills/not-ours"
+printf '# not ours\n' > "$AGENTS_HOME/skills/not-ours/SKILL.md"
+if "$ROOT/scripts/agents.sh" remove not-ours >/dev/null 2>&1; then
+  printf 'removal deleted a component this project does not own\n' >&2
+  exit 1
+fi
+[[ -f "$AGENTS_HOME/skills/not-ours/SKILL.md" ]]
+rm -rf "$AGENTS_HOME/skills/not-ours"
+
+# removal of an owned component drops it from the manifest too.
+"$ROOT/scripts/agents.sh" remove skill:lead-magnet >/dev/null
+[[ ! -e "$AGENTS_HOME/skills/lead-magnet" ]]
+if grep -qx 'skill:lead-magnet' "$AGENTS_HOME/.ecosystem-installed"; then
+  printf 'removal left the component in the installed manifest\n' >&2
+  exit 1
+fi
+"$ROOT/scripts/install.sh" --profile all >/dev/null
+[[ -f "$AGENTS_HOME/skills/lead-magnet/SKILL.md" ]]
 
 [[ -f "$AGENTS_HOME/skills/natural-writing/SKILL.md" ]]
 [[ -f "$AGENTS_HOME/skills/ceo/SKILL.md" ]]

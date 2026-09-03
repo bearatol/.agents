@@ -31,9 +31,11 @@ local-llm/
 /.ecosystem-hosts
 /.ecosystem-profiles
 /.ecosystem-state.json
+/.ecosystem-disabled.json
 /.ecosystem-state-windows.json
 /.skill-lock.json
 /CATALOG.md
+/.disabled/
 /agents/
 /catalog.json
 /catalog.schema.json

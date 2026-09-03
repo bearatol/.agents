@@ -20,6 +20,8 @@ usage() {
   printf '%s\n' '  agents.sh library init|add|trust|activate|list|check   Manage personal work'
   printf '%s\n' '  agents.sh team init|task|result|review|decide|status   Coordinate AI tools'
   printf '%s\n' '  agents.sh registry report|plan|reconcile               Explain who owns each path'
+  printf '%s\n' '  agents.sh disable|enable NAME                          Switch a component off or on'
+  printf '%s\n' '  agents.sh remove NAME                                  Delete a component this project owns'
   printf '%s\n' '  agents.sh status                                       Check the installation'
   printf '%s\n' '  agents.sh doctor                                       Run the full health check'
   printf '%s\n' ''
@@ -44,6 +46,13 @@ case "$command_name" in
     ;;
   library|team)
     exec python3 "$SCRIPT_DIR/workspace.py" --repo "$ROOT" --home "$DEST_HOME" "$command_name" "$@"
+    ;;
+  remove|disable|enable)
+    [[ $# -eq 1 || ($# -eq 2 && "$2" == '--dry-run') ]] || \
+      fail "usage: agents.sh $command_name NAME [--dry-run]"
+    validate_agents_home "$DEST_HOME"
+    exec python3 "$SCRIPT_DIR/lifecycle.py" \
+      --repo "$ROOT" --home "$DEST_HOME" --user-home "$HOME" "$command_name" "$@"
     ;;
   registry)
     [[ $# -gt 0 ]] || fail 'usage: agents.sh registry report|plan|reconcile'

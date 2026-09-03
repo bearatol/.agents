@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Added `agents.sh remove`, `disable`, and `enable`. Removal deletes only a
+  component this project owns in the registry and refuses anything claimed by
+  another tool, claimed twice, or linking outside the runtime. Deactivation
+  moves a component into a recorded holding area and takes its published host
+  links down, so a component installed by another tool can be switched off
+  without being destroyed, and put back later.
+- Taught the registry about deactivated components, so a switched-off component
+  reports as disabled instead of missing and an installation would not
+  recreate it.
 - Recorded the next architectural decision in
   `docs/adr/0002-shared-directory-sources-and-attested-packages.md`: `~/.agents`
   is a shared runtime this tool is a tenant of, content moves to its own

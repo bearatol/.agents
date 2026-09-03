@@ -32,6 +32,8 @@ from environment import (
 from state import digest_path
 
 FOREIGN_RECORDS = (".skill-lock.json",)
+DISABLED_DIRECTORY = ".disabled"
+DISABLED_RECORD = ".ecosystem-disabled.json"
 NATIVE_DISCOVERY_HOSTS = {"generic", "kimi", "koda"}
 LINKING_HOSTS = {"codex", "claude", "gemini", "sourcecraft"}
 DIRECTORY_KINDS = {"skill": "skills", "tool": "tools", "model": "local-models"}
@@ -48,7 +50,7 @@ ROOT_SOURCES = {
 MAX_FOREIGN_ENTRIES = 4096
 
 OWNER_ORDER = {"catalog": 0, "workspace": 1, "foreign": 2, "unknown": 3}
-STATE_ORDER = {"missing": 0, "locally-modified": 1, "managed-stale": 2, "present": 3, "current": 4}
+STATE_ORDER = {"missing": 0, "locally-modified": 1, "managed-stale": 2, "disabled": 3, "present": 4, "current": 5}
 ALL_KINDS = sorted(set(RUNTIME_KINDS) | {"orchestration", "root"})
 
 
@@ -84,6 +86,20 @@ def link_target(path):
         return os.readlink(path)
     except OSError:
         return None
+
+
+def load_disabled(home):
+    """Read the record of components withdrawn from the hosts."""
+    path = pathlib.Path(home) / DISABLED_RECORD
+    if not path.is_file():
+        return {"schema_version": 1, "entries": {}}
+    try:
+        data = read_json_file(path, limited=True, no_follow=True)
+    except (EcosystemError, OSError):
+        return {"schema_version": 1, "entries": {}}
+    if not isinstance(data, dict) or not isinstance(data.get("entries"), dict):
+        return {"schema_version": 1, "entries": {}}
+    return data
 
 
 def catalog_claims(repo, home):
@@ -259,6 +275,9 @@ def describe(path, kind, context):
         else:
             trust = "unreviewed"
 
+    if component_id in context["disabled"]:
+        state = "disabled"
+        exists = False
     outside = escapes_home(path, context["home"]) if exists else False
     return {
         "id": component_id,
@@ -286,6 +305,7 @@ def build_entries(repo, home, user_home, *, kinds=None):
     kinds = set(kinds or [])
     foreign, warnings = foreign_claims(home)
     context = {
+        "disabled": load_disabled(home).get("entries", {}),
         "catalog": catalog_claims(repo, home),
         "workspace": workspace_claims(repo, home),
         "foreign": foreign,
@@ -308,6 +328,15 @@ def build_entries(repo, home, user_home, *, kinds=None):
             continue
         entries.append(describe(path, claim["kind"], context))
 
+    listed = {entry["id"] for entry in entries}
+    for component_id, item in sorted(context["disabled"].items()):
+        if component_id in listed:
+            continue
+        kind = item.get("kind", component_id.split(":", 1)[0])
+        if kinds and kind not in kinds:
+            continue
+        entries.append(describe(home / item.get("path", ""), kind, context))
+
     if skipped:
         warnings.append(f"{skipped} generated index or plain file(s) in runtime directories were not attributed")
     entries.sort(key=lambda item: (OWNER_ORDER.get(item["owner"], 9), STATE_ORDER.get(item["state"], 9), item["id"]))
@@ -316,6 +345,8 @@ def build_entries(repo, home, user_home, *, kinds=None):
 
 def plan_action(entry):
     """Decide what an apply step would do, without doing any of it."""
+    if entry["state"] == "disabled":
+        return "keep", "withdrawn from the hosts by an explicit decision"
     if entry["owner"] != "catalog":
         return "keep", f"owned by {entry['owner']}; the installer does not write this path"
     if entry["state"] == "current":
