@@ -124,26 +124,69 @@ Trust at the level of a source is what makes this usable. Reviewing 170
 components by hand is not work anyone will do. Deciding about eight sources is.
 
 When a scan finds a defect, the response depends on ownership. In a source we
-publish, we fix it. In someone else's source we do not: the tool records the
-verdict, withholds installation of critical findings, warns on the rest, and
-leaves the decision with the user. The tool is a witness, not an editor of
-other people's work. That is also the only role that scales.
+publish, we fix it. In someone else's source we do not edit their files: the
+tool records the verdict, withholds installation of critical findings, warns on
+the rest, and offers the user removal, deactivation, or derivation. The tool is
+a witness, not an editor of other people's work. That is also the only role
+that scales.
 
-### 7. Packages declare compatibility
+### 7. Scanning runs locally, not only in a pipeline
+
+A verdict published by a source is a claim. The user must be able to check it
+on their own machine, and to check components no source ever attested. So the
+same scan runs from the command line, from any interface built later, and in a
+pipeline. One implementation, three triggers; a pipeline is that command with a
+severity threshold that fails the build.
+
+Consequences of running it locally:
+
+- **Verdicts are cached by content hash.** A scan examines what has never been
+  scanned and what has changed since it was, so a repeat run is close to free
+  and status stays instant. This is the same hash binding as above, now paying
+  for itself.
+- **A scanner is an untrusted dependency like any other.** It is third-party
+  code executing over the user's files, so it is pinned to a version, never
+  installed or run without consent, and its network access is explicit rather
+  than assumed.
+- **No scanner present is a normal state.** Components report as unscanned.
+  Absence of a scanner is never an error and never blocks the rest of the tool.
+- **Several scanners may disagree.** Each verdict is stored with the tool that
+  produced it. The tool presents them side by side and does not average them
+  into a single grade.
+
+### 8. A defect in someone else's package is fixed by derivation
+
+Editing a foreign component in place would break its provenance, break its
+updates, and make the user the maintainer of a silent fork.
+
+Instead the tool derives: it creates a new component in a source the user owns,
+seeded from the original content and the scan findings, and records the lineage
+as derived from that source at that hash. The user's agents do the writing,
+through whatever skill-authoring component they already have, and the result is
+scanned like anything else because it is now ordinary owned content.
+
+The original stays as it was, and may still update or be removed. The alias
+rule from decision 4 covers the name.
+
+This is the loop that makes a report worth reading: every finding leads to
+remove, disable, or derive, rather than to a dead end.
+
+### 9. Packages declare compatibility
 
 A package declares its own version and the tool versions it works with. Until
 that exists, moving the library out of this repository would produce a first
 run that fetches a second repository of unknown compatibility, with nothing
 able to detect the mismatch.
 
-### 8. Reporting before serving
+### 10. Reporting before serving
 
 The first visual surface is a generated self-contained report file, produced
 from the registry's existing output and opened directly from disk. It carries
 no server and no listening port.
 
-A local interface may follow once there are actions worth performing, and only
-under fixed constraints: bound to the loopback interface, an ephemeral port
+A local interface becomes justified once there are actions worth performing,
+which is when scanning, removal, deactivation and derivation all exist. It may
+then follow, and only under fixed constraints: bound to the loopback interface, an ephemeral port
 rather than a well-known one, a single-use token issued by the command line,
 verification of request origin, no cross-origin access, and read-only unless
 explicitly started otherwise.
@@ -170,16 +213,20 @@ is trust cannot ship that.
 Each step is usable on its own, and each is required by the next.
 
 1. `remove` and `disable`, driven by ownership.
-2. One real scanner integrated as a producer of verdicts, and the generated
-   report file as the first visual surface.
-3. Attestations and signing, first for the package we publish ourselves.
-4. Package versions and compatibility declarations.
-5. Sources as data, with pinned and linked modes.
-6. The library moves to its own repository.
-7. A local interface, under the constraints above, once actions exist.
+2. One real scanner behind a local `scan` command, with verdicts cached by
+   content hash, and the generated report file as the first visual surface.
+3. `derive`, so a finding in someone else's component has an answer other than
+   deletion.
+4. Attestations and signing, first for the package we publish ourselves, with
+   the pipeline reusing the same local scan.
+5. Package versions and compatibility declarations.
+6. Sources as data, with pinned and linked modes.
+7. The library moves to its own repository.
+8. A local interface, under the constraints above.
 
-Reordering steps 4 to 6 ahead of the rest produces a first run that cannot
-work and cannot be diagnosed.
+Steps 1 to 3 are what turn a report into something a person can act on.
+Reordering steps 5 to 7 ahead of them produces a first run that cannot work and
+cannot be diagnosed.
 
 ## Consequences
 
@@ -190,7 +237,10 @@ Good:
 - The project's own content stops being privileged, which is what allows other
   people's libraries to be first-class.
 - Scanner verdicts stop being single moments and become state that expires
-  when content changes.
+  when content changes, and the same check runs on the user's machine and in a
+  pipeline instead of only where the publisher chose to run it.
+- Every finding has an action attached: remove it, switch it off, or derive an
+  owned version and let the user's own agents write the fix.
 - Following the directory specification means other tools can read the same
   runtime without knowing about this one.
 
@@ -201,7 +251,12 @@ Costs:
 - Splitting the library means the tool and its content can drift in version,
   which is why compatibility declarations come first.
 - Reading a third-party record and a third-party scanner couples this project
-  to formats it does not control. Both are treated as untrusted input.
+  to formats it does not control. Both are treated as untrusted input, and
+  running a scanner locally means executing third-party code over the user's
+  files, which is why it is pinned and consented to.
+- Derivation multiplies components. A user who derives freely ends up
+  maintaining copies that no longer track upstream, so the lineage record has
+  to make that visible.
 - A draft specification may change under us, or be abandoned. Matching a layout
   is still cheaper than defining a competing one, and nothing depends on that
   specification surviving.
@@ -224,6 +279,17 @@ answer to shared use is ownership, not avoidance.
 **Write our own scanner.** Rejected: several security vendors already publish
 one, and the unclaimed work is keeping their verdicts attached to installed
 state over time.
+
+**Scan only when publishing, and trust attestations when installing.** Cheaper,
+and it keeps third-party code off the user's machine. Rejected: it leaves every
+component that no source attested permanently unknown, and it asks the user to
+believe a claim they have no way to check. The point of the layer is that the
+user can verify rather than believe.
+
+**Fix foreign components in place when a scan finds something.** It is what a
+user asks for in the moment. Rejected: it silently forks the component, breaks
+its updates, and destroys the provenance that justifies the whole design.
+Derivation gives the same outcome while keeping both records intact.
 
 **Ship the local interface first, since navigating many components by hand is
 the original problem.** Rejected for sequencing, not for merit: with no apply,

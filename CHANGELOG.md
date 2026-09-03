@@ -7,7 +7,10 @@
   is a shared runtime this tool is a tenant of, content moves to its own
   package repository, sources become records with pinned and linked modes,
   removal and deactivation act only on owned paths, and packages carry scan
-  evidence bound to a content hash.
+  evidence bound to a content hash. Scanning runs from the command line on the
+  user's machine, not only in a publisher's pipeline, and a finding in someone
+  else's component is answered by deriving an owned copy rather than by editing
+  theirs.
 - Recorded the ownership model in
   `docs/adr/0001-ownership-layers-and-activation-registry.md`: source, managed
   runtime, and personal workspace, with one owner per activated path.
