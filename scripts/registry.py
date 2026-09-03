@@ -14,6 +14,10 @@ import os
 import pathlib
 import sys
 
+# Importing sibling modules must not leave bytecode caches in the source
+# tree; installers copy component directories verbatim.
+sys.dont_write_bytecode = True
+
 from environment import (
     EnvironmentError as EcosystemError,
     HOSTS,

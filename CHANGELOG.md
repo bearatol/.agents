@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Recorded the next architectural decision in
+  `docs/adr/0002-shared-directory-sources-and-attested-packages.md`: `~/.agents`
+  is a shared runtime this tool is a tenant of, content moves to its own
+  package repository, sources become records with pinned and linked modes,
+  removal and deactivation act only on owned paths, and packages carry scan
+  evidence bound to a content hash.
 - Recorded the ownership model in
   `docs/adr/0001-ownership-layers-and-activation-registry.md`: source, managed
   runtime, and personal workspace, with one owner per activated path.

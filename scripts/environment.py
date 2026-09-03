@@ -14,6 +14,10 @@ import subprocess
 import sys
 import tempfile
 
+# Importing sibling modules must not leave bytecode caches in the source
+# tree; installers copy component directories verbatim.
+sys.dont_write_bytecode = True
+
 from state import digest_path, load_state, save_state
 
 

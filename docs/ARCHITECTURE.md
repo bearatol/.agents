@@ -58,6 +58,15 @@ paths that need a human decision, including names claimed by two records and
 links that leave the runtime. Reasoning and trade-offs are recorded in
 `docs/adr/0001-ownership-layers-and-activation-registry.md`.
 
+`~/.agents` is a shared runtime with several writers, not this project's
+private destination. The tool matches the community directory layout where
+that is free, writes only paths it owns, and reports the rest.
+`docs/adr/0002-shared-directory-sources-and-attested-packages.md` records the
+decisions that follow from that: content moves to its own package repository,
+sources become data with pinned and linked modes, identifiers are qualified
+while installed names stay flat, removal and deactivation act only on owned
+paths, and packages carry scan evidence bound to a content hash.
+
 ## Sources of truth
 
 - `catalog/catalog.json` describes every component, agent capability, access
