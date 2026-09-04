@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Fixed the Windows setup and its test: both looped over `$Host`, which
+  PowerShell keeps read-only, so a comma-separated application list failed on
+  Windows only.
+- Added a repository check for assignment to read-only PowerShell variables, so
+  a POSIX run catches that class of defect before the Windows job does.
 - Added `agents.sh remove`, `disable`, and `enable`. Removal deletes only a
   component this project owns in the registry and refuses anything claimed by
   another tool, claimed twice, or linking outside the runtime. Deactivation

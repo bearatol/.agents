@@ -12,9 +12,9 @@ try {
   New-Item -ItemType Directory -Force -Path $env:USERPROFILE | Out-Null
   & (Join-Path $RepoRoot 'scripts/bootstrap.ps1') -Work code -App 'codex, kimi'
   if ($LASTEXITCODE) { throw 'PowerShell setup did not accept a comma-separated AI application list.' }
-  foreach ($Host in @('codex', 'kimi')) {
-    if (-not (Select-String -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts') -SimpleMatch $Host -Quiet)) {
-      throw "PowerShell setup did not record $Host from the comma-separated application list."
+  foreach ($AppName in @('codex', 'kimi')) {
+    if (-not (Select-String -LiteralPath (Join-Path $env:AGENTS_HOME '.ecosystem-hosts') -SimpleMatch $AppName -Quiet)) {
+      throw "PowerShell setup did not record $AppName from the comma-separated application list."
     }
   }
 

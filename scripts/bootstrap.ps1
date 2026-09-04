@@ -21,8 +21,8 @@ function Add-UniqueValue([System.Collections.Generic.List[string]]$Values, [stri
 function Add-HostChoices([System.Collections.Generic.List[string]]$Hosts, [string[]]$Values) {
   $AllowedHosts = @('codex','claude','gemini','kimi','koda','sourcecraft','generic')
   foreach ($Value in $Values) {
-    foreach ($Host in $Value -split ',') {
-      $Name = $Host.Trim()
+    foreach ($Entry in $Value -split ',') {
+      $Name = $Entry.Trim()
       if ([string]::IsNullOrWhiteSpace($Name)) { throw 'Empty AI application choice.' }
       if ($Name -notin $AllowedHosts) { throw "Unsupported AI application: $Name" }
       Add-UniqueValue $Hosts $Name
